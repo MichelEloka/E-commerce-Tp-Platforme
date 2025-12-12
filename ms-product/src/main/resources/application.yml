@@ -9,11 +9,16 @@ spring:
     username: sa
     password:
 
+  sql:
+    init:
+      mode: always # exécuter data.sql même en dev/test
+
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+    defer-datasource-initialization: true # exécuter data.sql après la création du schéma JPA
     properties:
       hibernate:
         format_sql: true
