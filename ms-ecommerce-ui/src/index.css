@@ -1,0 +1,183 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: #e2e8f0;
+}
+
+body {
+  margin: 0;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.12), transparent 25%),
+    radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.15), transparent 25%), var(--bg);
+  color: var(--text);
+}
+
+.app-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--header);
+  backdrop-filter: blur(10px);
+}
+
+.tab {
+  @apply inline-flex items-center px-3 py-2 rounded-lg text-sm font-semibold transition;
+  color: var(--text);
+  background: var(--tab);
+  border: 1px solid transparent;
+}
+.tab.active {
+  border-color: var(--border-strong);
+  background: var(--card);
+}
+
+.card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  @apply inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition;
+}
+
+.btn-primary {
+  @apply btn;
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.btn-ghost {
+  @apply btn;
+  background: var(--pill);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.theme-toggle {
+  font-size: 0.9rem;
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.theme-dark {
+  --bg: #0f172a;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --card: rgba(15, 23, 42, 0.9);
+  --border: rgba(148, 163, 184, 0.25);
+  --border-strong: rgba(148, 163, 184, 0.5);
+  --header: rgba(15, 23, 42, 0.85);
+  --accent: #0ea5e9;
+  --accent-contrast: #0b1726;
+  --pill: rgba(148, 163, 184, 0.15);
+  --tab: rgba(148, 163, 184, 0.12);
+  --shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+}
+
+.theme-light {
+  --bg: #f8fafc;
+  --text: #0f172a;
+  --muted: #475569;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --header: rgba(255, 255, 255, 0.8);
+  --accent: #0ea5e9;
+  --accent-contrast: #0f172a;
+  --pill: rgba(226, 232, 240, 0.6);
+  --tab: rgba(226, 232, 240, 0.8);
+  --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .card,
+.theme-light .btn-ghost,
+.theme-light .btn-primary,
+.theme-light .app-header,
+.theme-light .tab {
+  color: var(--text);
+}
+
+/* Soften fixed slate shades in light mode */
+.theme-light .text-slate-50,
+.theme-light .text-slate-100,
+.theme-light .text-slate-200,
+.theme-light .text-slate-400,
+.theme-light .text-slate-200\/80 {
+  color: var(--muted) !important;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.product-img {
+  width: 82px;
+  height: 82px;
+  border-radius: 0.75rem;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: var(--pill);
+  flex-shrink: 0;
+}
+
+.product-img.large {
+  width: 160px;
+  height: 160px;
+}
+
+.product-img.placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.view-toggle {
+  border: 1px solid var(--border);
+  background: var(--card);
+  justify-content: center;
+  align-items: center;
+}
+
+.subtle {
+  opacity: 0.8;
+  font-size: 0.85rem;
+  border-color: transparent;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.modal-card {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  width: min(600px, 95vw);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
