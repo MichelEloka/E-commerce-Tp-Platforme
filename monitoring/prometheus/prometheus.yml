@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  - job_name: ms-membership
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["ms-membership:8081"]
+        labels:
+          service: ms-membership
+
+  - job_name: ms-product
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["ms-product:8082"]
+        labels:
+          service: ms-product
+
+  - job_name: ms-order
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["ms-order:8083"]
+        labels:
+          service: ms-order

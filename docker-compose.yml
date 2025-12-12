@@ -1,0 +1,103 @@
+services:
+  ms-membership:
+    build:
+      context: ./ms-membership
+      dockerfile: Dockerfile
+    container_name: ms-membership
+    env_file:
+      - ./env.local
+    environment:
+      APP_PORT: ${MS_MEMBERSHIP_PORT:-8081}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+    ports:
+      - "${MS_MEMBERSHIP_PORT:-8081}:8081"
+    networks:
+      - ecommerce
+
+  ms-product:
+    build:
+      context: ./ms-product
+      dockerfile: Dockerfile
+    container_name: ms-product
+    env_file:
+      - ./env.local
+    environment:
+      APP_PORT: ${MS_PRODUCT_PORT:-8082}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+      ORDER_SERVICE_URL: ${ORDER_SERVICE_URL:-http://ms-order:8083}
+    ports:
+      - "${MS_PRODUCT_PORT:-8082}:8082"
+    networks:
+      - ecommerce
+
+  ms-order:
+    build:
+      context: ./ms-order
+      dockerfile: Dockerfile
+    container_name: ms-order
+    env_file:
+      - ./env.local
+    environment:
+      APP_PORT: ${MS_ORDER_PORT:-8083}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+    ports:
+      - "${MS_ORDER_PORT:-8083}:8083"
+    networks:
+      - ecommerce
+    profiles:
+      - order
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    env_file:
+      - ./env.local
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - ecommerce
+    depends_on:
+      - ms-membership
+      - ms-product
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    env_file:
+      - ./env.local
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks:
+      - ecommerce
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+
+  ms-ecommerce-ui:
+    build:
+      context: ./ms-ecommerce-ui
+      dockerfile: Dockerfile
+    container_name: ms-ecommerce-ui
+    env_file:
+      - ./env.local
+    environment:
+      PORT: ${MS_UI_PORT:-5173}
+      VITE_MEMBERSHIP_API: ${VITE_MEMBERSHIP_API:-http://localhost:8081}
+      VITE_PRODUCT_API: ${VITE_PRODUCT_API:-http://localhost:8082}
+      VITE_ORDER_API: ${VITE_ORDER_API:-http://localhost:8083}
+    ports:
+      - "${MS_UI_PORT:-5173}:5173"
+    networks:
+      - ecommerce
+
+networks:
+  ecommerce:
+    driver: bridge

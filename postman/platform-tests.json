@@ -1,0 +1,80 @@
+{
+  "info": {
+    "name": "platform-tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Scenario complet",
+      "item": [
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "url": "{{membership_api}}/api/v1/users",
+            "body": {"mode":"raw","raw":"{\n  \"firstName\": \"Jean\",\n  \"lastName\": \"Dupont\",\n  \"email\": \"jean.dupont@example.com\"\n}"}
+          }
+        },
+        {
+          "name": "Create product",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "url": "{{product_api}}/api/v1/products",
+            "body": {"mode":"raw","raw":"{\n  \"name\": \"Keyboard\",\n  \"description\": \"RGB keyboard\",\n  \"price\": 79.99,\n  \"stock\": 10,\n  \"category\": \"ELECTRONICS\"\n}"}
+          }
+        },
+        {
+          "name": "Create order",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "url": "{{order_api}}/api/v1/orders",
+            "body": {"mode":"raw","raw":"{\n  \"userId\": 1,\n  \"productIds\": [1],\n  \"shippingAddress\": \"Paris\"\n}"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tests d'erreur",
+      "item": [
+        {
+          "name": "Commande user inexistant",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "url": "{{order_api}}/api/v1/orders",
+            "body": {"mode":"raw","raw":"{\n  \"userId\": 9999,\n  \"productIds\": [1],\n  \"shippingAddress\": \"Paris\"\n}"}
+          }
+        },
+        {
+          "name": "Produit rupture",
+          "request": {
+            "method": "POST",
+            "header": [ {"key":"Content-Type","value":"application/json"} ],
+            "url": "{{order_api}}/api/v1/orders",
+            "body": {"mode":"raw","raw":"{\n  \"userId\": 1,\n  \"productIds\": [999],\n  \"shippingAddress\": \"Paris\"\n}"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Endpoints unitaires",
+      "item": [
+        {"name":"List users","request":{"method":"GET","url":"{{membership_api}}/api/v1/users"}},
+        {"name":"Get user","request":{"method":"GET","url":"{{membership_api}}/api/v1/users/1"}},
+        {"name":"List products","request":{"method":"GET","url":"{{product_api}}/api/v1/products"}},
+        {"name":"Get product","request":{"method":"GET","url":"{{product_api}}/api/v1/products/1"}},
+        {"name":"Products available","request":{"method":"GET","url":"{{product_api}}/api/v1/products/available"}},
+        {"name":"Products category","request":{"method":"GET","url":"{{product_api}}/api/v1/products/category/ELECTRONICS"}},
+        {"name":"List orders","request":{"method":"GET","url":"{{order_api}}/api/v1/orders"}}
+      ]
+    }
+  ],
+  "variable": [
+    {"key": "membership_api", "value": "http://localhost:8081"},
+    {"key": "product_api", "value": "http://localhost:8082"},
+    {"key": "order_api", "value": "http://localhost:8083"}
+  ]
+}
