@@ -9,11 +9,16 @@ spring:
     username: sa
     password:
 
+  sql:
+    init:
+      mode: always
+
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
@@ -105,3 +110,12 @@ logging:
     org.hibernate.SQL: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+
+# Inter-service URLs (Docker DNS names for containerized env)
+membership:
+  service:
+    url: ${MEMBERSHIP_SERVICE_URL:http://localhost:8081}
+
+product:
+  service:
+    url: ${PRODUCT_SERVICE_URL:http://localhost:8082}
