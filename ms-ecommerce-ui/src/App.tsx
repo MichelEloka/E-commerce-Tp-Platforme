@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Bell, AlertTriangle, Users, TrendingUp, Sun, Moon } from "lucide-react";
 import { api } from "./api/client";
 import type { Order, Product, User } from "./api/types";
 import { Panel } from "./components/Panel";
@@ -10,6 +11,8 @@ import { ProductFields } from "./components/ProductFields";
 import { UserFields } from "./components/UserFields";
 import { ProductCard } from "./components/ProductCard";
 import { UserCard } from "./components/UserCard";
+import { OrderCard } from "./components/OrderCard";
+import { OrderFields } from "./components/OrderFields";
 
 type View = "dashboard" | "products" | "orders" | "users";
 
@@ -45,9 +48,32 @@ function App() {
   const [detailUser, setDetailUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<Partial<User> | null>(null);
   const [userIdLookup, setUserIdLookup] = useState("");
+  const [showNewOrder, setShowNewOrder] = useState(false);
+  const [newOrder, setNewOrder] = useState<{ userId: number | ""; shippingAddress: string; items: Array<{ productId: number | ""; quantity: number }> }>({
+    userId: "",
+    shippingAddress: "",
+    items: []
+  });
+  const [filterOrderStatus, setFilterOrderStatus] = useState<string>("");
 
   const lowStock = useMemo(() => products.filter(p => p.stock < 5).length, [products]);
   const totalStock = useMemo(() => products.reduce((acc, p) => acc + (p.stock ?? 0), 0), [products]);
+
+  const orderStats = useMemo(() => {
+    const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const pendingOrders = orders.filter(o => o.status === "PENDING").length;
+    const deliveredOrders = orders.filter(o => o.status === "DELIVERED").length;
+    return { totalRevenue, pendingOrders, deliveredOrders };
+  }, [orders]);
+
+  const usersMap = useMemo(() => {
+    const map = new Map<number, string>();
+    users.forEach(u => {
+      const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || `User #${u.id}`;
+      map.set(u.id, fullName);
+    });
+    return map;
+  }, [users]);
 
   async function loadProducts() {
     try {
@@ -311,6 +337,75 @@ function App() {
     }
   }
 
+  async function handleCreateOrder() {
+    if (!newOrder.userId || newOrder.items.length === 0) {
+      toast.error("Veuillez sélectionner un utilisateur et ajouter au moins un article");
+      return;
+    }
+    try {
+      setLoading(true);
+      await api.orders.create({
+        userId: Number(newOrder.userId),
+        shippingAddress: newOrder.shippingAddress,
+        items: newOrder.items.map(item => ({
+          productId: Number(item.productId),
+          quantity: item.quantity
+        }))
+      });
+      setNewOrder({ userId: "", shippingAddress: "", items: [] });
+      setShowNewOrder(false);
+      await loadOrders();
+      toast.success("Commande créée avec succès");
+    } catch (e) {
+      const msg = (e as Error).message;
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpdateOrderStatus(id: number, status: Order["status"]) {
+    try {
+      await api.orders.updateStatus(id, status);
+      await loadOrders();
+      toast.success(`Statut mis à jour: ${status}`);
+    } catch (e) {
+      const msg = (e as Error).message;
+      setError(msg);
+      toast.error(msg);
+    }
+  }
+
+  async function handleCancelOrder(id: number) {
+    if (!confirm("Annuler cette commande ?")) return;
+    try {
+      await api.orders.delete(id);
+      await loadOrders();
+      toast.success("Commande annulée");
+    } catch (e) {
+      const msg = (e as Error).message;
+      setError(msg);
+      toast.error(msg);
+    }
+  }
+
+  async function applyOrderFilters() {
+    try {
+      setLoading(true);
+      const data = filterOrderStatus
+        ? await api.orders.byStatus(filterOrderStatus)
+        : await api.orders.list();
+      setOrders(data as Order[]);
+    } catch (e) {
+      const msg = (e as Error).message;
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const createdByCategory = useMemo(() => {
     const map: Record<string, number> = {};
     for (const c of categories) map[c] = 0;
@@ -332,14 +427,23 @@ function App() {
             <p className="text-sm text-muted">Pilotage des services Membership, Product, Order</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="btn-ghost" onClick={() => { setView("products"); setShowNewProduct(s => !s); }}>
-              {showNewProduct ? "Masquer produit" : "Add product"}
-            </button>
-            <button className="btn-ghost" onClick={() => { setView("users"); setShowNewUser(s => !s); }}>
-              {showNewUser ? "Masquer user" : "Add user"}
-            </button>
+            {view === "products" && (
+              <button className="btn-primary" onClick={() => setShowNewProduct(s => !s)}>
+                {showNewProduct ? "✕ Fermer" : "+ Nouveau produit"}
+              </button>
+            )}
+            {view === "users" && (
+              <button className="btn-primary" onClick={() => setShowNewUser(s => !s)}>
+                {showNewUser ? "✕ Fermer" : "+ Nouvel utilisateur"}
+              </button>
+            )}
+            {view === "orders" && (
+              <button className="btn-primary" onClick={() => setShowNewOrder(s => !s)}>
+                {showNewOrder ? "✕ Fermer" : "+ Nouvelle commande"}
+              </button>
+            )}
             <button className="btn-ghost theme-toggle" onClick={() => setTheme(t => (t === "dark" ? "light" : "dark"))}>
-              {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           </div>
         </div>
@@ -356,22 +460,78 @@ function App() {
 
         {view === "dashboard" && (
           <div className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-4">
-              <StatCard label="Produits" value={products.length} hint={`${lowStock} à stock bas (<5)`} />
-              <StatCard label="Utilisateurs" value={users.length} />
-              <StatCard label="Stock total" value={totalStock} />
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Bell size={16} className="text-blue-400" />
+                  <span className="text-sm text-slate-400">Actions requises</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-50">{orderStats.pendingOrders}</div>
+                <div className="text-xs text-slate-500">Commandes en attente</div>
+              </div>
+              <div className="card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle size={16} className="text-amber-400" />
+                  <span className="text-sm text-slate-400">Stock critique</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-50">{lowStock}</div>
+                <div className="text-xs text-slate-500">Produits à réapprovisionner</div>
+              </div>
+              <div className="card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users size={16} className="text-green-400" />
+                  <span className="text-sm text-slate-400">Clients actifs</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-50">{users.filter(u => u.active !== false).length}</div>
+                <div className="text-xs text-slate-500">{users.length} total</div>
+              </div>
+              <div className="card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp size={16} className="text-emerald-400" />
+                  <span className="text-sm text-slate-400">Revenu total</span>
+                </div>
+                <div className="text-2xl font-bold text-slate-50">{orderStats.totalRevenue.toFixed(0)} €</div>
+                <div className="text-xs text-slate-500">Toutes commandes</div>
+              </div>
             </div>
 
-            <Panel title="Produits par catégorie">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {categories.map(cat => (
-                  <div key={cat} className="card p-3 text-center">
-                    <div className="text-xs text-slate-400 uppercase">{cat}</div>
-                    <div className="text-xl font-bold text-slate-50">{createdByCategory[cat] ?? 0}</div>
-                  </div>
-                ))}
-              </div>
-            </Panel>
+            <div className="grid md:grid-cols-2 gap-4">
+              <Panel title="Statuts des commandes">
+                <div className="space-y-2">
+                  {(["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"] as const).map(status => {
+                    const count = orders.filter(o => o.status === status).length;
+                    const color = status === "CANCELLED" ? "red" : status === "PENDING" ? "amber" : status === "DELIVERED" ? "green" : "blue";
+                    return (
+                      <div key={status} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge color={color}>{status}</Badge>
+                        </div>
+                        <span className="text-slate-300 font-semibold">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Panel>
+
+              <Panel title="Top 5 produits">
+                <div className="space-y-2">
+                  {products
+                    .sort((a, b) => (b.stock ?? 0) - (a.stock ?? 0))
+                    .slice(0, 5)
+                    .map(p => (
+                      <div key={p.id} className="flex items-center justify-between text-sm">
+                        <span className="text-slate-300 truncate">{p.name}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge color={p.stock < 5 ? "red" : p.stock < 10 ? "amber" : "green"}>
+                            {p.stock}
+                          </Badge>
+                          <span className="text-slate-400 text-xs">{p.price.toFixed(0)}€</span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </Panel>
+            </div>
           </div>
         )}
 
@@ -481,24 +641,65 @@ function App() {
         )}
 
         {view === "orders" && (
-          <Panel title="Commandes">
-            <div className="grid gap-3">
-              {orders.length === 0 && <div className="text-slate-400">Aucune commande pour le moment.</div>}
-              {orders.map(o => (
-                <div key={o.id} className="card p-3 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold">Commande #{o.id}</div>
-                    <Badge color={o.status === "CANCELLED" ? "red" : o.status === "PENDING" ? "amber" : "green"}>
-                      {o.status}
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-slate-400">Utilisateur #{o.userId}</div>
-                  <div className="text-sm text-slate-200 font-semibold">Total : {o.totalAmount} €</div>
-                  <div className="text-xs text-slate-400">Livraison : {o.shippingAddress}</div>
+          <div className="space-y-4">
+            {showNewOrder && (
+              <Panel
+                title="Nouvelle commande"
+                actions={<span className="text-xs text-slate-400">{loading ? "Chargement..." : ""}</span>}
+              >
+                <OrderFields
+                  value={newOrder}
+                  onChange={setNewOrder}
+                  users={users}
+                  products={products}
+                />
+                <div className="flex justify-end mt-3">
+                  <button className="btn-primary" onClick={handleCreateOrder} disabled={loading}>
+                    Créer la commande
+                  </button>
                 </div>
-              ))}
-            </div>
-          </Panel>
+              </Panel>
+            )}
+
+            <Panel
+              title="Commandes"
+              actions={
+                <div className="flex gap-2 items-center">
+                  <select
+                    className="card px-3 py-2 text-sm"
+                    value={filterOrderStatus}
+                    onChange={e => setFilterOrderStatus(e.target.value)}
+                  >
+                    <option value="">Tous les statuts</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="CONFIRMED">CONFIRMED</option>
+                    <option value="SHIPPED">SHIPPED</option>
+                    <option value="DELIVERED">DELIVERED</option>
+                    <option value="CANCELLED">CANCELLED</option>
+                  </select>
+                  <button className="btn-primary" onClick={applyOrderFilters}>
+                    Filtrer
+                  </button>
+                  <button className="btn-ghost subtle" onClick={() => { setFilterOrderStatus(""); loadOrders(); }}>
+                    Réinitialiser
+                  </button>
+                </div>
+              }
+            >
+              <div className="grid gap-3">
+                {orders.length === 0 && <div className="text-slate-400">Aucune commande pour le moment.</div>}
+                {orders.map(o => (
+                  <OrderCard
+                    key={o.id}
+                    order={o}
+                    userName={usersMap.get(o.userId)}
+                    onUpdateStatus={handleUpdateOrderStatus}
+                    onCancel={handleCancelOrder}
+                  />
+                ))}
+              </div>
+            </Panel>
+          </div>
         )}
 
         {view === "users" && (
