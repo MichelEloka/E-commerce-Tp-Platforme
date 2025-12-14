@@ -151,6 +151,33 @@ function App() {
     document.body.classList.add(`theme-${theme}`);
   }, [theme]);
 
+  // Auto-apply product filters
+  useEffect(() => {
+    if (view === "products") {
+      applyFilters();
+    }
+  }, [filterCategory, filterAvailable, filterActive, search]);
+
+  // Auto-apply order filters
+  useEffect(() => {
+    if (view === "orders") {
+      applyOrderFilters();
+    }
+  }, [filterOrderStatus]);
+
+  // Auto-apply user filters
+  useEffect(() => {
+    if (view === "users") {
+      if (userSearch) {
+        searchUsers();
+      } else if (userActiveOnly) {
+        loadUsersActive();
+      } else {
+        loadUsers();
+      }
+    }
+  }, [userSearch, userActiveOnly]);
+
   async function handleCreateProduct() {
     try {
       setLoading(true);
@@ -612,17 +639,12 @@ function App() {
                       <option value="inactive">Inactifs</option>
                     </select>
                   </label>
-                  <div className="flex gap-2">
-                    <button
-                      className="btn-ghost subtle"
-                      onClick={() => { setFilterCategory(""); setFilterAvailable(false); setFilterActive("all"); applyFilters(); }}
-                    >
-                      Réinitialiser
-                    </button>
-                    <button className="btn-primary" onClick={applyFilters}>
-                      Appliquer
-                    </button>
-                  </div>
+                  <button
+                    className="btn-ghost subtle"
+                    onClick={() => { setFilterCategory(""); setFilterAvailable(false); setFilterActive("all"); }}
+                  >
+                    Réinitialiser
+                  </button>
                 </div>
               )}
                 <div className="grid gap-3">
@@ -677,9 +699,6 @@ function App() {
                     <option value="DELIVERED">DELIVERED</option>
                     <option value="CANCELLED">CANCELLED</option>
                   </select>
-                  <button className="btn-primary" onClick={applyOrderFilters}>
-                    Filtrer
-                  </button>
                   <button className="btn-ghost subtle" onClick={() => { setFilterOrderStatus(""); loadOrders(); }}>
                     Réinitialiser
                   </button>
@@ -726,19 +745,13 @@ function App() {
                 <input
                   type="checkbox"
                   checked={userActiveOnly}
-                  onChange={e => {
-                    setUserActiveOnly(e.target.checked);
-                    if (e.target.checked) loadUsersActive(); else loadUsers();
-                  }}
+                  onChange={e => setUserActiveOnly(e.target.checked)}
                 />
                 <span>Actifs seulement</span>
               </label>
-              <div className="flex gap-2">
-                <button className="btn-primary" onClick={searchUsers}>Rechercher</button>
-                <button className="btn-ghost subtle" onClick={() => { setUserSearch(""); setUserActiveOnly(false); loadUsers(); }}>
-                  Réinitialiser
-                </button>
-              </div>
+              <button className="btn-ghost subtle" onClick={() => { setUserSearch(""); setUserActiveOnly(false); loadUsers(); }}>
+                Réinitialiser
+              </button>
             </div>
             {showNewUser && (
               <Panel title="Nouvel utilisateur">
