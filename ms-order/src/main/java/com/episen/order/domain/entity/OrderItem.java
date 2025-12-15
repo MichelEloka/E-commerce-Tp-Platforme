@@ -61,11 +61,6 @@ public class OrderItem {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal subtotal;
 
-    @PrePersist
-    @PreUpdate
-    public void calculateSubtotal() {
-        if (quantity != null && unitPrice != null) {
-            this.subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        }
-    }
+    // Le calcul du subtotal est maintenant fait dans Order.calculateTotal()
+    // pour garantir que le total de la commande soit correct
 }

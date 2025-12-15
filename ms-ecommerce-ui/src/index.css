@@ -38,21 +38,59 @@ body {
   background: var(--card);
 }
 
+.nav-link {
+  @apply inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all;
+  color: var(--muted);
+  position: relative;
+}
+.nav-link:hover {
+  color: var(--text);
+  background: var(--pill);
+}
+.nav-link.active {
+  color: var(--text);
+  font-weight: 600;
+}
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+}
+
 .card {
   border: 1px solid var(--border);
   background: var(--card);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+.card:hover:not(.stat-card) {
+  border-color: var(--border-strong);
 }
 
 .btn {
-  @apply inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition;
+  @apply inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all;
+  cursor: pointer;
+  border: none;
 }
 
 .btn-primary {
   @apply btn;
   background: var(--accent);
   color: var(--accent-contrast);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25);
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+}
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-ghost {
@@ -60,6 +98,42 @@ body {
   background: var(--pill);
   color: var(--text);
   border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  background: var(--tab);
+  border-color: var(--border-strong);
+}
+
+.btn-ghost.icon-only {
+  padding: 0.5rem;
+  aspect-ratio: 1;
+}
+
+.create-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 50;
+}
+
+.create-menu-item {
+  @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.create-menu-item:hover {
+  background: var(--pill);
 }
 
 .theme-toggle {
@@ -120,9 +194,29 @@ body {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 0.85rem;
+  gap: 8px;
+  font-size: 0.875rem;
   color: var(--muted);
+}
+
+/* Input fields */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+  transition: all 0.2s ease;
+}
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
 .product-img {
@@ -180,4 +274,95 @@ body {
   padding: 1.25rem;
   width: min(600px, 95vw);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* Hero Section */
+.hero-section {
+  @apply card p-8;
+  background: linear-gradient(135deg, var(--card) 0%, rgba(14, 165, 233, 0.05) 100%);
+}
+
+/* Stat Cards */
+.stat-card {
+  @apply card p-6;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.stat-icon-blue {
+  background: rgba(14, 165, 233, 0.15);
+  color: #0ea5e9;
+}
+.stat-icon-amber {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+.stat-icon-green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+.stat-icon-emerald {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.stat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.stat-subtitle {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.stat-link {
+  @apply flex items-center gap-1 text-xs font-medium mt-1;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+.stat-link:hover {
+  opacity: 0.8;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "orders")
@@ -90,13 +91,25 @@ public class Order {
         item.setOrder(null);
     }
 
-    @PrePersist
-    @PreUpdate
-    public void calculateTotalBeforeSave() {
+    // Méthode publique pour calculer le total (appelée depuis le service)
+    public void calculateTotal() {
         if (items != null && !items.isEmpty()) {
+            // D'abord calculer le subtotal de chaque item
+            items.forEach(item -> {
+                if (item.getQuantity() != null && item.getUnitPrice() != null) {
+                    item.setSubtotal(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+                } else {
+                    item.setSubtotal(BigDecimal.ZERO);
+                }
+            });
+
+            // Ensuite calculer le total
             this.totalAmount = items.stream()
                     .map(OrderItem::getSubtotal)
+                    .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            this.totalAmount = BigDecimal.ZERO;
         }
     }
 }

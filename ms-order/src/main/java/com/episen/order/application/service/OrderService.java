@@ -70,6 +70,10 @@ public class OrderService {
         for (OrderItemRequestDTO itemDto : dto.getItems()) {
             ProductClient.ProductResponseDTO product = productClient.getProduct(itemDto.getProductId());
 
+            // Log de debug pour voir ce que retourne le ProductClient
+            log.debug("Produit recupere: id={}, name={}, price={}, stock={}",
+                    product.getId(), product.getName(), product.getPrice(), product.getStock());
+
             // Verifier le stock
             if (product.getStock() < itemDto.getQuantity()) {
                 throw new IllegalStateException(
@@ -79,11 +83,17 @@ public class OrderService {
             }
 
             OrderItem orderItem = orderItemMapper.toEntity(itemDto, product.getName(), product.getPrice());
+            log.debug("OrderItem cree: productId={}, quantity={}, unitPrice={}",
+                    orderItem.getProductId(), orderItem.getQuantity(), orderItem.getUnitPrice());
             orderItems.add(orderItem);
         }
 
         // Creer la commande
         Order order = orderMapper.toEntity(dto, orderItems);
+
+        // Calculer le total AVANT de sauvegarder
+        order.calculateTotal();
+        log.debug("Total calcule pour la commande: {}", order.getTotalAmount());
 
         // Sauvegarder (cascade sur items)
         Order savedOrder = orderRepository.save(order);

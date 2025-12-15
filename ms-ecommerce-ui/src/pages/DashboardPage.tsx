@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, AlertTriangle, Users, TrendingUp } from "lucide-react";
+import { Bell, AlertTriangle, Users, TrendingUp, Package, CheckCircle, ShoppingBag, ArrowRight } from "lucide-react";
 import { Order, Product, User } from "../api/types";
 import { Panel } from "../components/Panel";
 import { Badge } from "../components/Badge";
@@ -32,71 +32,75 @@ export function DashboardPage({ orders, products, users, usersMap, orderStats, l
   );
 
   return (
-    <div className="space-y-6">
-      <div className="card p-6">
-        <h2 className="text-2xl font-bold text-slate-50 mb-2">Tableau de bord</h2>
-        <p className="text-slate-400">Vue d'ensemble de votre plateforme e-commerce</p>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button
-          onClick={() => navigate("/orders")}
-          className="card p-4 hover:bg-slate-700/50 transition-colors text-left"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Bell size={18} className="text-blue-400" />
-            <span className="text-sm text-slate-400">Commandes en attente</span>
+    <div className="space-y-8">
+      {/* Hero Section */}
+      <div className="hero-section">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-50 mb-2">Tableau de bord</h1>
+            <p className="text-lg text-slate-400">Bienvenue sur votre plateforme de gestion e-commerce</p>
           </div>
-          <div className="text-3xl font-bold text-slate-50">{orderStats.pendingOrders}</div>
-          <div className="text-xs text-blue-400 mt-1">Voir les commandes →</div>
-        </button>
-
-        <button
-          onClick={() => navigate("/products")}
-          className="card p-4 hover:bg-slate-700/50 transition-colors text-left"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle size={18} className="text-amber-400" />
-            <span className="text-sm text-slate-400">Stock critique</span>
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate("/products")} className="btn-ghost flex items-center gap-2">
+              <Package size={18} />
+              <span>Produits</span>
+            </button>
+            <button onClick={() => navigate("/orders")} className="btn-ghost flex items-center gap-2">
+              <ShoppingBag size={18} />
+              <span>Commandes</span>
+            </button>
           </div>
-          <div className="text-3xl font-bold text-slate-50">{lowStock}</div>
-          <div className="text-xs text-amber-400 mt-1">Voir les produits →</div>
-        </button>
-
-        <button
-          onClick={() => navigate("/users")}
-          className="card p-4 hover:bg-slate-700/50 transition-colors text-left"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Users size={18} className="text-green-400" />
-            <span className="text-sm text-slate-400">Clients actifs</span>
-          </div>
-          <div className="text-3xl font-bold text-slate-50">{users.filter(u => u.active !== false).length}</div>
-          <div className="text-xs text-slate-500 mt-1">Sur {users.length} total</div>
-        </button>
-
-        <div className="card p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp size={18} className="text-emerald-400" />
-            <span className="text-sm text-slate-400">Revenu total</span>
-          </div>
-          <div className="text-3xl font-bold text-slate-50">{orderStats.totalRevenue.toFixed(0)} €</div>
-          <div className="text-xs text-slate-500 mt-1">{orders.length} commandes</div>
         </div>
       </div>
 
-      <div className="card p-4">
-        <h3 className="text-lg font-semibold text-slate-50 mb-3">Actions rapides</h3>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => navigate("/products/new")} className="btn-primary">
-            + Nouveau produit
-          </button>
-          <button onClick={() => navigate("/orders/new")} className="btn-primary">
-            + Nouvelle commande
-          </button>
-          <button onClick={() => navigate("/users/new")} className="btn-primary">
-            + Nouvel utilisateur
-          </button>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="stat-card">
+          <div className="stat-icon stat-icon-blue">
+            <Package size={24} />
+          </div>
+          <div className="stat-content">
+            <div className="stat-label">Total Produits</div>
+            <div className="stat-value">{products.length}</div>
+            <button onClick={() => navigate("/products")} className="stat-link">
+              Voir les produits <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon stat-icon-amber">
+            <AlertTriangle size={24} />
+          </div>
+          <div className="stat-content">
+            <div className="stat-label">Stock Critique</div>
+            <div className="stat-value">{lowStock}</div>
+            <button onClick={() => navigate("/products")} className="stat-link">
+              Vérifier le stock <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon stat-icon-green">
+            <CheckCircle size={24} />
+          </div>
+          <div className="stat-content">
+            <div className="stat-label">Commandes Livrées</div>
+            <div className="stat-value">{orderStats.deliveredOrders}</div>
+            <div className="stat-subtitle">{orders.length} total</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon stat-icon-emerald">
+            <TrendingUp size={24} />
+          </div>
+          <div className="stat-content">
+            <div className="stat-label">Revenu Total</div>
+            <div className="stat-value">{orderStats.totalRevenue.toFixed(0)} €</div>
+            <div className="stat-subtitle">{orderStats.deliveredOrders} commandes</div>
+          </div>
         </div>
       </div>
 

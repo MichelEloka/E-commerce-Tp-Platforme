@@ -10,12 +10,10 @@ import { api } from "../api/client";
 
 const categories: Product["category"][] = ["ELECTRONICS", "BOOKS", "FOOD", "OTHER"];
 
-// ===== ProductsPage (Liste) =====
 type ProductsPageProps = {
   search: string;
   setSearch: (value: string) => void;
   filteredProducts: Product[];
-  onUpdateStock: (id: number, stock: number) => void;
   onDeleteProduct: (id: number) => void;
 };
 
@@ -23,40 +21,40 @@ export function ProductsPage({
   search,
   setSearch,
   filteredProducts,
-  onUpdateStock,
   onDeleteProduct
 }: ProductsPageProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-4">
-      <Panel
-        title="Catalogue produits"
-        actions={
-          <div className="flex gap-2 items-center">
-            <input
-              className="card px-3 py-2"
-              placeholder="Rechercher par nom (instantané)"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-            <span className="text-xs text-slate-400">{filteredProducts.length} produit(s)</span>
-          </div>
-        }
-      >
-        <div className="grid gap-3">
-          {filteredProducts.length === 0 && <div className="text-slate-400">Aucun produit trouvé</div>}
-          {filteredProducts.map(p => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              onUpdateStock={onUpdateStock}
-              onViewDetails={(id) => navigate(`/products/${id}`)}
-              onDelete={onDeleteProduct}
-            />
-          ))}
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-50">Catalogue produits</h2>
+          <p className="text-sm text-muted mt-1">{filteredProducts.length} produit(s) disponible(s)</p>
         </div>
-      </Panel>
+        <input
+          className="card px-4 py-2.5 w-full sm:w-80"
+          placeholder="Rechercher un produit..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="grid gap-4">
+        {filteredProducts.length === 0 && (
+          <div className="card p-8 text-center">
+            <p className="text-slate-400">Aucun produit trouvé</p>
+          </div>
+        )}
+        {filteredProducts.map(p => (
+          <ProductCard
+            key={p.id}
+            product={p}
+            onViewDetails={(id) => navigate(`/products/${id}`)}
+            onDelete={onDeleteProduct}
+          />
+        ))}
+      </div>
     </div>
   );
 }

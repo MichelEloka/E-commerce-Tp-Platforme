@@ -1,5 +1,5 @@
 import { useState, memo } from "react";
-import { User } from "lucide-react";
+import { User, MapPin, Calendar, Package, Eye, XCircle, ChevronRight } from "lucide-react";
 import { Badge } from "./Badge";
 import type { Order } from "../api/types";
 import { OrderItemsList } from "./OrderItemsList";
@@ -35,71 +35,87 @@ export const OrderCard = memo(function OrderCard({ order, userName, onUpdateStat
   const nextStatus = getNextStatus();
 
   return (
-    <div className="card p-3 space-y-2">
-      <div className="flex items-start justify-between gap-2">
-        <div className="space-y-1 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">Commande #{order.id}</span>
-            <Badge color={statusColors[order.status]}>{order.status}</Badge>
-          </div>
-          <div className="text-xs text-slate-400 flex items-center gap-1">
-            {userName ? (
-              <>
-                <User size={14} />
-                <span>{userName}</span>
-              </>
-            ) : (
-              `Utilisateur #${order.userId}`
-            )}
-          </div>
-          <div className="text-sm text-slate-200 font-semibold">{order.totalAmount.toFixed(2)} €</div>
-          <div className="text-xs text-slate-400 truncate">{order.shippingAddress}</div>
-          {order.orderDate && (
-            <div className="text-xs text-slate-500">
-              {new Date(order.orderDate).toLocaleString("fr-FR")}
+    <div className="card p-4 hover:shadow-lg transition-all">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex-1 space-y-3">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h3 className="text-base font-bold text-slate-50">Commande #{order.id}</h3>
+              <Badge color={statusColors[order.status]}>{order.status}</Badge>
             </div>
-          )}
-          <div className="flex gap-2 items-center">
+            <span className="text-xl font-bold text-slate-50">{order.totalAmount.toFixed(2)} €</span>
+          </div>
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            <div className="flex items-center gap-2 text-muted">
+              <User size={16} className="flex-shrink-0" />
+              <span className="truncate">{userName || `Utilisateur #${order.userId}`}</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted">
+              <MapPin size={16} className="flex-shrink-0" />
+              <span className="truncate">{order.shippingAddress}</span>
+            </div>
+            {order.orderDate && (
+              <div className="flex items-center gap-2 text-muted">
+                <Calendar size={16} className="flex-shrink-0" />
+                <span>{new Date(order.orderDate).toLocaleDateString("fr-FR")}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-muted">
+              <Package size={16} className="flex-shrink-0" />
+              <span>{order.items?.length ?? 0} article(s)</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-2">
             <button
-              className="text-xs text-blue-400 hover:underline"
+              className="btn-ghost subtle flex items-center gap-2"
               onClick={() => setShowItems(!showItems)}
             >
-              {showItems ? "Masquer" : "Voir"} les {order.items?.length ?? 0} article(s)
+              <Package size={16} />
+              <span>{showItems ? "Masquer" : "Voir"} les articles</span>
             </button>
             {onViewDetails && (
               <button
-                className="text-xs text-blue-400 hover:underline"
+                className="btn-ghost subtle flex items-center gap-2"
                 onClick={() => onViewDetails(order.id)}
               >
-                Détails
+                <Eye size={16} />
+                <span>Détails</span>
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
+        {/* Status Actions */}
+        <div className="flex lg:flex-col gap-2">
           {canUpdateStatus && nextStatus && (
             <button
-              className="btn-ghost subtle text-xs"
+              className="btn-primary flex items-center gap-2 flex-1 lg:flex-initial"
               onClick={() => onUpdateStatus(order.id, nextStatus)}
             >
-              → {nextStatus}
+              <span>{nextStatus}</span>
+              <ChevronRight size={16} />
             </button>
           )}
 
           {canUpdateStatus && (
             <button
-              className="btn-ghost subtle text-xs text-red-400"
+              className="btn-ghost subtle flex items-center gap-2 text-red-400 hover:bg-red-500/10 flex-1 lg:flex-initial"
               onClick={() => onCancel(order.id)}
             >
-              Annuler
+              <XCircle size={16} />
+              <span>Annuler</span>
             </button>
           )}
         </div>
       </div>
 
       {showItems && order.items && order.items.length > 0 && (
-        <div className="border-t border-slate-700 pt-2">
+        <div className="border-t border-slate-700 mt-4 pt-4">
           <OrderItemsList items={order.items} />
         </div>
       )}

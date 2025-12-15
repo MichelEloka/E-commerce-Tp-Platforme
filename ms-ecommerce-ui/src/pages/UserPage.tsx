@@ -61,55 +61,55 @@ export function UsersPage({
   }, [userSearch, userActiveOnly, onSearchUsers, onLoadUsersActive]);
 
   return (
-    <div className="space-y-4">
-      <div className="card p-3 flex flex-wrap gap-3 items-center">
-        <input
-          className="card px-3 py-2"
-          placeholder="Rechercher par nom"
-          value={userSearch}
-          onChange={e => setUserSearch(e.target.value)}
-        />
-        <div className="flex items-center gap-2">
-          <input
-            className="card px-3 py-2 w-32"
-            placeholder="ID utilisateur"
-            value={userIdLookup}
-            onChange={e => setUserIdLookup(e.target.value)}
-          />
-          <button className="btn-ghost subtle" onClick={() => userIdLookup && navigate(`/users/${userIdLookup}`)}>
-            Charger ID
-          </button>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-50">Utilisateurs</h2>
+          <p className="text-sm text-muted mt-1">{users.length} utilisateur(s)</p>
         </div>
-        <label className="field flex-row items-center gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
           <input
-            type="checkbox"
-            checked={userActiveOnly}
-            onChange={e => setUserActiveOnly(e.target.checked)}
+            className="card px-4 py-2.5 w-full sm:w-64"
+            placeholder="Rechercher par nom..."
+            value={userSearch}
+            onChange={e => setUserSearch(e.target.value)}
           />
-          <span>Actifs seulement</span>
-        </label>
-        <button className="btn-ghost subtle" onClick={() => { setUserSearch(""); setUserActiveOnly(false); onLoadUsers(); }}>
-          Réinitialiser
-        </button>
+          <label className="flex items-center gap-2 btn-ghost subtle cursor-pointer">
+            <input
+              type="checkbox"
+              checked={userActiveOnly}
+              onChange={e => setUserActiveOnly(e.target.checked)}
+            />
+            <span>Actifs uniquement</span>
+          </label>
+          {(userSearch || userActiveOnly) && (
+            <button className="btn-ghost subtle" onClick={() => { setUserSearch(""); setUserActiveOnly(false); onLoadUsers(); }}>
+              Réinitialiser
+            </button>
+          )}
+        </div>
       </div>
 
-      <Panel title="Utilisateurs">
-        <div className="grid gap-3">
-          {users.map(u => (
-            <UserCard
-              key={u.id}
-              user={u}
-              onView={(id) => navigate(`/users/${id}`)}
-              onDelete={onDeleteUser}
-              onToggleActive={(id, active) => {
-                if (active) {
-                  onDeactivateUser(id);
-                }
-              }}
-            />
-          ))}
-        </div>
-      </Panel>
+      <div className="grid gap-4">
+        {users.length === 0 && (
+          <div className="card p-8 text-center">
+            <p className="text-slate-400">Aucun utilisateur trouvé</p>
+          </div>
+        )}
+        {users.map(u => (
+          <UserCard
+            key={u.id}
+            user={u}
+            onView={(id) => navigate(`/users/${id}`)}
+            onDelete={onDeleteUser}
+            onToggleActive={(id, active) => {
+              if (active) {
+                onDeactivateUser(id);
+              }
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

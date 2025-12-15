@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Routes, Route, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Plus, Package, ShoppingCart, Users as UsersIcon } from "lucide-react";
 import { api } from "./api/client";
 import type { Order, Product, User } from "./api/types";
 import {
@@ -55,6 +55,7 @@ function App() {
     items: []
   });
   const [filterOrderStatus, setFilterOrderStatus] = useState<string>("");
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
 
   const lowStock = useMemo(() => products.filter(p => p.stock < 5).length, [products]);
   const totalStock = useMemo(() => products.reduce((acc, p) => acc + (p.stock ?? 0), 0), [products]);
@@ -402,50 +403,94 @@ function App() {
   return (
     <div className="app-shell">
       <ToastContainer position="bottom-right" theme={theme === "dark" ? "dark" : "light"} transition={Slide} />
-      <header className="app-header sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold">E-commerce Manager</h1>
-            <p className="text-sm text-muted">Pilotage des services Membership, Product, Order</p>
+      <header className="app-header sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex items-center gap-8">
+              <div>
+                <h1 className="text-xl font-bold">E-commerce Manager</h1>
+                <p className="text-xs text-muted mt-0.5">Plateforme de gestion</p>
+              </div>
+
+              <nav className="hidden md:flex items-center gap-1">
+                <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                  Dashboard
+                </NavLink>
+                <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                  Produits
+                </NavLink>
+                <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                  Commandes
+                </NavLink>
+                <NavLink to="/users" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                  Utilisateurs
+                </NavLink>
+              </nav>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <button
+                  className="btn-primary flex items-center gap-2"
+                  onClick={() => setShowCreateMenu(!showCreateMenu)}
+                  onBlur={() => setTimeout(() => setShowCreateMenu(false), 200)}
+                >
+                  <Plus size={18} />
+                  <span className="hidden sm:inline">Créer</span>
+                </button>
+
+                {showCreateMenu && (
+                  <div className="create-menu">
+                    <button
+                      className="create-menu-item"
+                      onClick={() => { navigate("/products/new"); setShowCreateMenu(false); }}
+                    >
+                      <Package size={16} />
+                      <span>Nouveau produit</span>
+                    </button>
+                    <button
+                      className="create-menu-item"
+                      onClick={() => { navigate("/orders/new"); setShowCreateMenu(false); }}
+                    >
+                      <ShoppingCart size={16} />
+                      <span>Nouvelle commande</span>
+                    </button>
+                    <button
+                      className="create-menu-item"
+                      onClick={() => { navigate("/users/new"); setShowCreateMenu(false); }}
+                    >
+                      <UsersIcon size={16} />
+                      <span>Nouvel utilisateur</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button className="btn-ghost icon-only" onClick={() => setTheme(t => (t === "dark" ? "light" : "dark"))}>
+                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {location.pathname.startsWith("/products") && !location.pathname.includes("/new") && (
-              <button className="btn-primary" onClick={() => navigate("/products/new")}>
-                + Nouveau produit
-              </button>
-            )}
-            {location.pathname.startsWith("/users") && !location.pathname.includes("/new") && (
-              <button className="btn-primary" onClick={() => navigate("/users/new")}>
-                + Nouvel utilisateur
-              </button>
-            )}
-            {location.pathname.startsWith("/orders") && !location.pathname.includes("/new") && (
-              <button className="btn-primary" onClick={() => navigate("/orders/new")}>
-                + Nouvelle commande
-              </button>
-            )}
-            <button className="btn-ghost theme-toggle" onClick={() => setTheme(t => (t === "dark" ? "light" : "dark"))}>
-              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </div>
+
+          {/* Mobile navigation */}
+          <nav className="md:hidden flex items-center gap-1 mt-4 overflow-x-auto pb-1">
+            <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              Dashboard
+            </NavLink>
+            <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              Produits
+            </NavLink>
+            <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              Commandes
+            </NavLink>
+            <NavLink to="/users" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              Utilisateurs
+            </NavLink>
+          </nav>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        <div className="view-toggle card p-2 flex gap-2 flex-wrap">
-          <NavLink to="/" end className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>
-            dashboard
-          </NavLink>
-          <NavLink to="/products" className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>
-            products
-          </NavLink>
-          <NavLink to="/orders" className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>
-            orders
-          </NavLink>
-          <NavLink to="/users" className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>
-            users
-          </NavLink>
-        </div>
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
         <Routes>
           <Route path="/" element={
@@ -463,7 +508,6 @@ function App() {
               search={search}
               setSearch={setSearch}
               filteredProducts={filteredProducts}
-              onUpdateStock={handleUpdateStock}
               onDeleteProduct={handleDeleteProduct}
             />
           } />

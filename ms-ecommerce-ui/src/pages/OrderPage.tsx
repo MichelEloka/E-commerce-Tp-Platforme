@@ -45,43 +45,50 @@ export function OrdersPage({
   }, [filterOrderStatus, onApplyOrderFilters]);
 
   return (
-    <div className="space-y-4">
-      <Panel
-        title="Commandes"
-        actions={
-          <div className="flex gap-2 items-center">
-            <select
-              className="card px-3 py-2 text-sm"
-              value={filterOrderStatus}
-              onChange={e => setFilterOrderStatus(e.target.value)}
-            >
-              <option value="">Tous les statuts</option>
-              <option value="PENDING">PENDING</option>
-              <option value="CONFIRMED">CONFIRMED</option>
-              <option value="SHIPPED">SHIPPED</option>
-              <option value="DELIVERED">DELIVERED</option>
-              <option value="CANCELLED">CANCELLED</option>
-            </select>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-50">Commandes</h2>
+          <p className="text-sm text-muted mt-1">{orders.length} commande(s)</p>
+        </div>
+        <div className="flex gap-2 items-center flex-wrap">
+          <select
+            className="card px-4 py-2.5 text-sm"
+            value={filterOrderStatus}
+            onChange={e => setFilterOrderStatus(e.target.value)}
+          >
+            <option value="">Tous les statuts</option>
+            <option value="PENDING">PENDING</option>
+            <option value="CONFIRMED">CONFIRMED</option>
+            <option value="SHIPPED">SHIPPED</option>
+            <option value="DELIVERED">DELIVERED</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+          {filterOrderStatus && (
             <button className="btn-ghost subtle" onClick={() => { setFilterOrderStatus(""); onLoadOrders(); }}>
               Réinitialiser
             </button>
-          </div>
-        }
-      >
-        <div className="grid gap-3">
-          {orders.length === 0 && <div className="text-slate-400">Aucune commande pour le moment.</div>}
-          {orders.map(o => (
-            <OrderCard
-              key={o.id}
-              order={o}
-              userName={usersMap.get(o.userId)}
-              onUpdateStatus={onUpdateOrderStatus}
-              onCancel={onCancelOrder}
-              onViewDetails={(id) => navigate(`/orders/${id}`)}
-            />
-          ))}
+          )}
         </div>
-      </Panel>
+      </div>
+
+      <div className="grid gap-4">
+        {orders.length === 0 && (
+          <div className="card p-8 text-center">
+            <p className="text-slate-400">Aucune commande pour le moment</p>
+          </div>
+        )}
+        {orders.map(o => (
+          <OrderCard
+            key={o.id}
+            order={o}
+            userName={usersMap.get(o.userId)}
+            onUpdateStatus={onUpdateOrderStatus}
+            onCancel={onCancelOrder}
+            onViewDetails={(id) => navigate(`/orders/${id}`)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
