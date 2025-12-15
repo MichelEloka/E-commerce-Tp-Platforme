@@ -67,7 +67,7 @@ public class Order {
     @Column(nullable = false, length = 200)
     private String shippingAddress;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @NotEmpty(message = "La commande doit contenir au moins un article")
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();

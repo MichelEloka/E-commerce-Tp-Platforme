@@ -43,7 +43,7 @@ public class OrderService {
 
     public List<OrderResponseDTO> getAllOrders() {
         log.debug("Recuperation de toutes les commandes");
-        List<Order> orders = orderRepository.findAll();
+        List<Order> orders = orderRepository.findAllWithItems();
         return orders.stream()
                 .map(orderMapper::toDto)
                 .collect(Collectors.toList());
@@ -51,7 +51,8 @@ public class OrderService {
 
     public OrderResponseDTO getOrderById(Long id) {
         log.debug("Recuperation de la commande avec id: {}", id);
-        Order order = findOrderOrThrow(id);
+        Order order = orderRepository.findByIdWithItems(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", id));
         return orderMapper.toDto(order);
     }
 
@@ -136,7 +137,7 @@ public class OrderService {
 
     public List<OrderResponseDTO> getOrdersByStatus(OrderStatus status) {
         log.debug("Recuperation des commandes avec le statut: {}", status);
-        List<Order> orders = orderRepository.findByStatus(status);
+        List<Order> orders = orderRepository.findByStatusWithItems(status);
         return orders.stream()
                 .map(orderMapper::toDto)
                 .collect(Collectors.toList());

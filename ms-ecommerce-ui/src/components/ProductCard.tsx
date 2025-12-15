@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Product } from "../api/types";
 import { Badge } from "./Badge";
 
@@ -8,7 +9,7 @@ type Props = {
   onDelete: (id: number) => void;
 };
 
-export function ProductCard({ product: p, onUpdateStock, onViewDetails, onDelete }: Props) {
+export const ProductCard = memo(function ProductCard({ product: p, onUpdateStock, onViewDetails, onDelete }: Props) {
   return (
     <div className="card p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
       <div className="flex gap-3 items-start">
@@ -46,4 +47,4 @@ export function ProductCard({ product: p, onUpdateStock, onViewDetails, onDelete
       </div>
     </div>
   );
-}
+});

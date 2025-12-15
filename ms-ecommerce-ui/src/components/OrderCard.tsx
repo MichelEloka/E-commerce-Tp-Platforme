@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { User } from "lucide-react";
 import { Badge } from "./Badge";
 import type { Order } from "../api/types";
@@ -9,9 +9,10 @@ type Props = {
   userName?: string;
   onUpdateStatus: (id: number, status: Order["status"]) => void;
   onCancel: (id: number) => void;
+  onViewDetails?: (id: number) => void;
 };
 
-export function OrderCard({ order, userName, onUpdateStatus, onCancel }: Props) {
+export const OrderCard = memo(function OrderCard({ order, userName, onUpdateStatus, onCancel, onViewDetails }: Props) {
   const [showItems, setShowItems] = useState(false);
 
   const statusColors: Record<Order["status"], "green" | "amber" | "sky" | "red"> = {
@@ -58,12 +59,22 @@ export function OrderCard({ order, userName, onUpdateStatus, onCancel }: Props) 
               {new Date(order.orderDate).toLocaleString("fr-FR")}
             </div>
           )}
-          <button
-            className="text-xs text-blue-400 hover:underline"
-            onClick={() => setShowItems(!showItems)}
-          >
-            {showItems ? "Masquer" : "Voir"} les {order.items?.length ?? 0} article(s)
-          </button>
+          <div className="flex gap-2 items-center">
+            <button
+              className="text-xs text-blue-400 hover:underline"
+              onClick={() => setShowItems(!showItems)}
+            >
+              {showItems ? "Masquer" : "Voir"} les {order.items?.length ?? 0} article(s)
+            </button>
+            {onViewDetails && (
+              <button
+                className="text-xs text-blue-400 hover:underline"
+                onClick={() => onViewDetails(order.id)}
+              >
+                Détails
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -94,4 +105,4 @@ export function OrderCard({ order, userName, onUpdateStatus, onCancel }: Props) 
       )}
     </div>
   );
-}
+});

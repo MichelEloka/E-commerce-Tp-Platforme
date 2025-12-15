@@ -72,6 +72,7 @@ export const api = {
   },
   orders: {
     list: () => request<any[]>(ORDER_API, "/api/v1/orders"),
+    get: (id: number) => request<any>(ORDER_API, `/api/v1/orders/${id}`),
     byStatus: (status: string) => request<any[]>(ORDER_API, `/api/v1/orders/status/${status}`),
     create: (payload: any) => request(ORDER_API, "/api/v1/orders", "POST", payload),
     updateStatus: (id: number, status: string) =>

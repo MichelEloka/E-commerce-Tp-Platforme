@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { User } from "../api/types";
 import { Badge } from "./Badge";
 
@@ -8,7 +9,7 @@ type Props = {
   onToggleActive: (id: number, active: boolean) => void;
 };
 
-export function UserCard({ user: u, onView, onDelete, onToggleActive }: Props) {
+export const UserCard = memo(function UserCard({ user: u, onView, onDelete, onToggleActive }: Props) {
   return (
     <div className="card p-3">
       <div className="font-semibold">{u.firstName ? `${u.firstName} ${u.lastName ?? ""}` : u.id}</div>
@@ -24,4 +25,4 @@ export function UserCard({ user: u, onView, onDelete, onToggleActive }: Props) {
       </div>
     </div>
   );
-}
+});
