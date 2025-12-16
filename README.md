@@ -9,40 +9,39 @@
 
 ---
 
-## 📋 Table des matières
+## Table des matières
 
-- [Vue d'ensemble](#-vue-densemble)
-- [Architecture](#-architecture)
-- [Technologies](#-technologies)
-- [Prérequis](#-prérequis)
-- [Installation](#-installation)
-- [Utilisation](#-utilisation)
-- [Tests](#-tests)
-- [API Documentation](#-api-documentation)
-- [Monitoring](#-monitoring)
-- [Structure du projet](#-structure-du-projet)
-- [Contribution](#-contribution)
+- [Vue d'ensemble](#vue-densemble)
+- [Architecture](#architecture)
+- [Technologies](#technologies)
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Utilisation](#utilisation)
+- [Tests](#tests)
+- [API Documentation](#api-documentation)
+- [Monitoring](#monitoring)
+- [Structure du projet](#structure-du-projet)
 
 ---
 
-## 🎯 Vue d'ensemble
+## Vue d'ensemble
 
 Cette plateforme e-commerce est composée de **3 microservices indépendants** communiquant via des API REST, avec une infrastructure complète de monitoring et un reverse proxy Traefik.
 
 ### Fonctionnalités principales
 
-- ✅ **Gestion des utilisateurs** (inscription, profil, recherche)
-- ✅ **Catalogue produits** (CRUD, catégories, stock, recherche)
-- ✅ **Gestion des commandes** (création, suivi, historique)
-- ✅ **Communication inter-services** (RestTemplate, validation)
-- ✅ **Monitoring temps réel** (Prometheus, Grafana)
-- ✅ **Health checks** personnalisés pour chaque service
-- ✅ **Métriques métier** (commandes, produits, utilisateurs)
-- ✅ **Documentation API** (Swagger/OpenAPI)
+- **Gestion des utilisateurs** (inscription, profil, recherche)
+- **Catalogue produits** (CRUD, catégories, stock, recherche)
+- **Gestion des commandes** (création, suivi, historique)
+- **Communication inter-services** (RestTemplate, validation)
+- **Monitoring temps réel** (Prometheus, Grafana)
+- **Health checks** personnalisés pour chaque service
+- **Métriques métier** (commandes, produits, utilisateurs)
+- **Documentation API** (Swagger/OpenAPI)
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────┐
@@ -85,7 +84,7 @@ Cette plateforme e-commerce est composée de **3 microservices indépendants** c
 
 ---
 
-## 🛠️ Technologies
+## Technologies
 
 ### Backend
 - **Java 21** - Langage de programmation
@@ -119,7 +118,7 @@ Cette plateforme e-commerce est composée de **3 microservices indépendants** c
 
 ---
 
-## 📦 Prérequis
+## Prérequis
 
 - **Java 21** ou supérieur ([OpenJDK](https://openjdk.org/))
 - **Maven 3.9+** ([Apache Maven](https://maven.apache.org/))
@@ -128,7 +127,7 @@ Cette plateforme e-commerce est composée de **3 microservices indépendants** c
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### 1. Cloner le repository
 
@@ -172,7 +171,7 @@ cd ms-order && mvn spring-boot:run
 
 ---
 
-## 💻 Utilisation
+## Utilisation
 
 ### Accès aux services
 
@@ -230,7 +229,7 @@ curl -X POST http://localhost/api/order/api/v1/orders \
 
 ---
 
-## 🧪 Tests
+## Tests
 
 ### Lancer tous les tests
 
@@ -246,18 +245,18 @@ cd ms-order && mvn test
 
 ### Couverture des tests
 
-| Service | Nombre de tests | Couverture |
-|---------|----------------|------------|
-| **ms-membership** | 5 tests | ✅ |
-| **ms-product** | 4 tests | ✅ |
-| **ms-order** | 9 tests | ✅ |
-| **Total** | **18 tests** | **✅ 200%** |
+| Service | Nombre de tests | Statut |
+|---------|----------------|--------|
+| **ms-membership** | 5 tests | OK |
+| **ms-product** | 4 tests | OK |
+| **ms-order** | 9 tests | OK |
+| **Total** | **18 tests** | **200%** |
 
 Tous les tests utilisent `@DisplayName` pour une meilleure lisibilité.
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 Chaque microservice expose sa documentation OpenAPI/Swagger:
 
@@ -268,13 +267,13 @@ Chaque microservice expose sa documentation OpenAPI/Swagger:
 ### Collection Postman
 
 Une collection Postman complète est disponible dans `postman/platform-tests.json` avec:
-- ✅ Scénario complet (Happy Path)
-- ✅ Tests d'erreur (User inexistant, rupture de stock)
-- ✅ Tests de tous les endpoints
+- Scénario complet (Happy Path)
+- Tests d'erreur (User inexistant, rupture de stock)
+- Tests de tous les endpoints
 
 ---
 
-## 📊 Monitoring
+## Monitoring
 
 ### Health Checks
 
@@ -306,7 +305,7 @@ Credentials: `admin` / `admin`
 
 ---
 
-## 📁 Structure du projet
+## Structure du projet
 
 ```
 E-commerce-Tp-Platforme/
@@ -363,54 +362,25 @@ E-commerce-Tp-Platforme/
 
 ---
 
-## 🤝 Contribution
-
-### Standards de code
-
-- **Architecture DDD** en couches (Domain, Application, Infrastructure)
-- **Clean Code** avec noms explicites et fonctions courtes
-- **SOLID principles** respectés
-- **Documentation** via Javadoc et README
-- **Tests unitaires** avec couverture minimale
-- **Validation** Bean Validation sur tous les DTOs
-- **Gestion d'erreurs** centralisée avec @ControllerAdvice
-
-### Workflow Git
-
-```bash
-# Créer une branche
-git checkout -b feature/nom-feature
-
-# Commiter les changements
-git add .
-git commit -m "feat: description de la feature"
-
-# Pousser et créer une PR
-git push origin feature/nom-feature
-```
-
-
----
-
-## 👥 Équipe
+## Équipe
 
 **Développeurs:**
 - Michel
 - Gaby
 
-Projet réalisé dans le cadre du TP1 - Architecture Microservices
+Projet réalisé dans le cadre du TP1 - Orchestration des microservices
 
-**EPISEN - Master 2 Architecture Logicielle**
+**EPISEN - Ing3 Orchestration des microservices**
 
 ---
 
-## 📞 Support
+## Support
 
 Pour toute question ou problème:
-- 📧 Email: support@esipen.com
-- 📚 Documentation: [DEPLOYMENT.md](DEPLOYMENT.md)
-- 🏥 Health Checks: http://localhost/api/*/actuator/health
+- Email: michel.eloka@etu.u-pec.fr / gaby.njonou-kouaya@etu.u-pec.fr
+- Documentation: [DEPLOYMENT.md](DEPLOYMENT.md)
+- Health Checks: http://localhost/api/*/actuator/health
 
 ---
 
-**⭐ Si ce projet vous a été utile, n'hésitez pas à lui donner une étoile!**
+**Si ce projet vous a été utile, n'hésitez pas à lui donner une étoile sur GitHub!**
