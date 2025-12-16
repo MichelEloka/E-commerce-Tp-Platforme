@@ -368,9 +368,9 @@ E-commerce-Tp-Platforme/
 - Michel
 - Gaby
 
-Projet réalisé dans le cadre du TP1 - Orchestration des microservice
+Projet réalisé dans le cadre du TP1 - Orchestration des microservices
 
-**EPISEN - Ing3 Orchestration des microservice**
+**EPISEN - Ing3 Orchestration des microservices**
 
 ---
 
@@ -381,4 +381,6 @@ Pour toute question ou problème:
 - Documentation: [DEPLOYMENT.md](DEPLOYMENT.md)
 - Health Checks: http://localhost/api/*/actuator/health
 
+---
 
+**Si ce projet vous a été utile, n'hésitez pas à lui donner une étoile sur GitHub!**

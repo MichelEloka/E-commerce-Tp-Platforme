@@ -6,8 +6,12 @@
 - Node 20+ (pour le front)
 - Docker + Docker Compose
 
+## Code source
+1. **Cloner le repose depuis github**
+lien du git : https://github.com/MichelEloka/E-commerce-Tp-Platforme.git
+
 ## Démarrage pas-à-pas
-1. **extraire l'archive**
+
 
 2. **Compiler les services Java**
    ```bash
