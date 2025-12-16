@@ -14,9 +14,9 @@ INSERT INTO orders (user_id, order_date, status, total_amount, shipping_address,
 VALUES
 (1, CURRENT_TIMESTAMP, 'PENDING', 79.99, '123 Rue de la Paix, Paris 75001', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 (2, CURRENT_TIMESTAMP, 'CONFIRMED', 189.98, '45 Avenue des Champs-Elysees, Paris 75008', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(1, DATEADD('DAY', -1, CURRENT_TIMESTAMP), 'DELIVERED', 114.65, '123 Rue de la Paix, Paris 75001', DATEADD('DAY', -1, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP),
-(3, DATEADD('DAY', -2, CURRENT_TIMESTAMP), 'SHIPPED', 59.99, '10 Boulevard Saint-Michel, Lyon 69001', DATEADD('DAY', -2, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP),
-(2, DATEADD('DAY', -3, CURRENT_TIMESTAMP), 'CANCELLED', 49.50, '45 Avenue des Champs-Elysees, Paris 75008', DATEADD('DAY', -3, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP);
+(1, CURRENT_TIMESTAMP - INTERVAL '1 day', 'DELIVERED', 114.65, '123 Rue de la Paix, Paris 75001', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP),
+(3, CURRENT_TIMESTAMP - INTERVAL '2 days', 'SHIPPED', 59.99, '10 Boulevard Saint-Michel, Lyon 69001', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP),
+(2, CURRENT_TIMESTAMP - INTERVAL '3 days', 'CANCELLED', 49.50, '45 Avenue des Champs-Elysees, Paris 75008', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP);
 
 -- Insert order items using real product IDs and names from ms-product (10 products)
 INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, subtotal)

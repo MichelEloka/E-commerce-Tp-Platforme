@@ -1,4 +1,4 @@
--- Données initiales pour la base de données H2
+-- Données initiales pour la base PostgreSQL
 -- Ce script est exécuté automatiquement au démarrage de l'application après la création du schéma par Hibernate
 
 -- Purge et reset de la séquence pour éviter les collisions d'ID

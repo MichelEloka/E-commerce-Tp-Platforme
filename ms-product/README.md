@@ -4,7 +4,7 @@ Service « produit » de la plateforme e-commerce.
 
 ## Technologies
 - Java 21, Spring Boot
-- Spring Web, Spring Data JPA (H2 en mémoire)
+- Spring Web, Spring Data JPA (PostgreSQL)
 - Spring Validation
 - SpringDoc OpenAPI (swagger-ui)
 - Spring Boot Actuator + Micrometer Prometheus
