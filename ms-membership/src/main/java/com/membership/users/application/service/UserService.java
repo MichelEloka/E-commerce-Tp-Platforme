@@ -151,13 +151,18 @@ public class UserService {
     }
 
     /**
-     * Recherche des utilisateurs par nom
+     * Recherche des utilisateurs par nom ou prénom (insensible à la casse)
      */
-    public List<UserResponseDTO> searchUsersByLastName(String lastName) {
-        log.debug("Recherche d'utilisateurs avec le nom: {}", lastName);
-        
-        List<User> users = userRepository.searchByLastName(lastName);
-        
+    public List<UserResponseDTO> searchUsers(String name) {
+        String keyword = name == null ? "" : name.trim();
+        log.debug("Recherche d'utilisateurs avec le terme: {}", keyword);
+
+        if (keyword.isEmpty()) {
+            return getAllUsers();
+        }
+
+        List<User> users = userRepository.searchByName(keyword);
+
         log.info("Nombre d'utilisateurs trouvés: {}", users.size());
         
         return users.stream()

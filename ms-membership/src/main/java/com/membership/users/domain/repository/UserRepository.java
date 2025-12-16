@@ -2,6 +2,7 @@ package com.membership.users.domain.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.membership.users.domain.entity.User;
@@ -37,8 +38,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * Recherche des utilisateurs par nom (insensible à la casse)
      */
-    @Query("SELECT u FROM User u WHERE LOWER(u.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))")
-    List<User> searchByLastName(String lastName);
+    @Query("""
+        SELECT u FROM User u
+        WHERE LOWER(u.lastName) LIKE LOWER(CONCAT('%', :name, '%'))
+           OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :name, '%'))
+    """)
+    List<User> searchByName(@Param("name") String name);
 
     /**
      * Compte le nombre d'utilisateurs actifs
