@@ -11,13 +11,13 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
     defer-datasource-initialization: true
     properties:
       hibernate:
@@ -103,9 +103,9 @@ info:
 logging:
   level:
     root: INFO
-    com.episen: DEBUG
+    com.episen: INFO
     org.springframework.web: INFO
-    org.hibernate.SQL: INFO
+    org.hibernate.SQL: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
 

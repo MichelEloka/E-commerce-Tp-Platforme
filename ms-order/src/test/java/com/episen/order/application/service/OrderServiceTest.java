@@ -9,6 +9,7 @@ import com.episen.order.domain.enums.OrderStatus;
 import com.episen.order.domain.repository.OrderRepository;
 import com.episen.order.infrastructure.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,12 +32,22 @@ class OrderServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private com.episen.order.application.mapper.OrderMapper orderMapper;
+
+    @Mock
+    private com.episen.order.application.mapper.OrderItemMapper orderItemMapper;
+
+    @Mock
+    private com.episen.order.infrastructure.client.ProductClient productClient;
+
+    @Mock
+    private com.episen.order.infrastructure.client.MembershipClient membershipClient;
+
     @InjectMocks
     private OrderService orderService;
 
     private Order testOrder;
-    private OrderRequestDTO testOrderRequest;
-
     @BeforeEach
     void setUp() {
         testOrder = Order.builder()
@@ -66,7 +77,7 @@ class OrderServiceTest {
                 .quantity(2)
                 .build();
 
-        testOrderRequest = OrderRequestDTO.builder()
+        OrderRequestDTO.builder()
                 .userId(1L)
                 .shippingAddress("123 Test Street")
                 .items(List.of(itemRequest))
@@ -75,7 +86,13 @@ class OrderServiceTest {
 
     @Test
     void testGetOrderById_Success() {
+        OrderResponseDTO expectedResponse = new OrderResponseDTO();
+        expectedResponse.setId(1L);
+        expectedResponse.setStatus(OrderStatus.PENDING);
+        expectedResponse.setTotalAmount(new BigDecimal("100.00"));
+
         when(orderRepository.findByIdWithItems(1L)).thenReturn(Optional.of(testOrder));
+        when(orderMapper.toDto(testOrder)).thenReturn(expectedResponse);
 
         OrderResponseDTO result = orderService.getOrderById(1L);
 
@@ -83,9 +100,9 @@ class OrderServiceTest {
         assertEquals(1L, result.getId());
         assertEquals(OrderStatus.PENDING, result.getStatus());
         assertEquals(new BigDecimal("100.00"), result.getTotalAmount());
-        assertEquals(1, result.getItems().size());
 
         verify(orderRepository, times(1)).findByIdWithItems(1L);
+        verify(orderMapper, times(1)).toDto(testOrder);
     }
 
     @Test
@@ -101,8 +118,13 @@ class OrderServiceTest {
 
     @Test
     void testUpdateOrderStatus_Success() {
+        OrderResponseDTO expectedResponse = new OrderResponseDTO();
+        expectedResponse.setId(1L);
+        expectedResponse.setStatus(OrderStatus.CONFIRMED);
+
         when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
+        when(orderMapper.toDto(any(Order.class))).thenReturn(expectedResponse);
 
         OrderResponseDTO result = orderService.updateOrderStatus(1L, OrderStatus.CONFIRMED);
 
@@ -152,7 +174,12 @@ class OrderServiceTest {
 
     @Test
     void testGetOrdersByUserId() {
+        OrderResponseDTO expectedResponse = new OrderResponseDTO();
+        expectedResponse.setId(1L);
+        expectedResponse.setUserId(1L);
+
         when(orderRepository.findByUserId(1L)).thenReturn(List.of(testOrder));
+        when(orderMapper.toDto(testOrder)).thenReturn(expectedResponse);
 
         List<OrderResponseDTO> results = orderService.getOrdersByUserId(1L);
 
@@ -165,7 +192,12 @@ class OrderServiceTest {
 
     @Test
     void testGetOrdersByStatus() {
+        OrderResponseDTO expectedResponse = new OrderResponseDTO();
+        expectedResponse.setId(1L);
+        expectedResponse.setStatus(OrderStatus.PENDING);
+
         when(orderRepository.findByStatusWithItems(OrderStatus.PENDING)).thenReturn(List.of(testOrder));
+        when(orderMapper.toDto(testOrder)).thenReturn(expectedResponse);
 
         List<OrderResponseDTO> results = orderService.getOrdersByStatus(OrderStatus.PENDING);
 
@@ -178,7 +210,11 @@ class OrderServiceTest {
 
     @Test
     void testGetAllOrders() {
+        OrderResponseDTO expectedResponse = new OrderResponseDTO();
+        expectedResponse.setId(1L);
+
         when(orderRepository.findAllWithItems()).thenReturn(List.of(testOrder));
+        when(orderMapper.toDto(testOrder)).thenReturn(expectedResponse);
 
         List<OrderResponseDTO> results = orderService.getAllOrders();
 
