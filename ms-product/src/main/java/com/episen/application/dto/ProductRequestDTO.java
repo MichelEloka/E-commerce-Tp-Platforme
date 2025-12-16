@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+/**
+ * Donnees attendues pour creer ou mettre a jour un produit.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

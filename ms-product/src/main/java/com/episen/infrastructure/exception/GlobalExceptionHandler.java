@@ -15,10 +15,20 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Gestionnaire global des exceptions REST pour le service produit.
+ */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * Traite les erreurs de ressource introuvable.
+     *
+     * @param ex      exception levee
+     * @param request requete HTTP en cours
+     * @return reponse 404 avec details
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(
@@ -34,6 +44,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * Traite les conflits lors de creation ou mise a jour de ressource.
+     *
+     * @param ex      exception levee
+     * @param request requete HTTP en cours
+     * @return reponse 409 avec details
+     */
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<ErrorResponse> handleResourceAlreadyExists(
@@ -49,6 +66,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
+    /**
+     * Traite les erreurs de validation des requetes @Valid.
+     *
+     * @param ex      exception de validation
+     * @param request requete HTTP en cours
+     * @return reponse 400 listant les erreurs de champs
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleValidationException(
@@ -80,6 +104,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Traite les erreurs de conversion de type sur les parametres de requete.
+     *
+     * @param ex      exception levee
+     * @param request requete HTTP en cours
+     * @return reponse 400 indiquant la valeur invalide
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(
@@ -99,6 +130,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Traite les IllegalArgumentException issues des regles metier.
+     *
+     * @param ex      exception levee
+     * @param request requete HTTP en cours
+     * @return reponse 400 avec le message d'erreur
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
@@ -115,6 +153,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Traite les IllegalStateException declenchees par des contraintes metier.
+     *
+     * @param ex      exception levee
+     * @param request requete HTTP en cours
+     * @return reponse 409 avec detail de l'etat invalide
+     */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ResponseEntity<ErrorResponse> handleIllegalState(
@@ -131,6 +176,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
+    /**
+     * Capture toute autre exception non specifique.
+     *
+     * @param ex      exception inopinee
+     * @param request requete HTTP en cours
+     * @return reponse 500 generique
+     */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorResponse> handleGlobal(

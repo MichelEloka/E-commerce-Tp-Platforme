@@ -25,6 +25,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import com.episen.domain.enums.Category;
 
+/**
+ * Entite JPA representant un produit de catalogue.
+ */
 @Entity
 @Table(name = "products")
 @Data

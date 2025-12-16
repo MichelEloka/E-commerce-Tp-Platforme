@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Modele standardise pour les reponses d'erreur REST du service produit.
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,6 +29,9 @@ public class ErrorResponse {
     private String path;
     private List<ValidationError> validationErrors;
 
+    /**
+     * Detail d'une erreur de validation de champ.
+     */
     @Data
     @Builder
     @NoArgsConstructor

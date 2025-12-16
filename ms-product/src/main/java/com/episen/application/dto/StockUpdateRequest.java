@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO pour la mise a jour partielle du stock d'un produit.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -23,6 +23,9 @@ import org.springframework.validation.annotation.Validated;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service metier pour gerer le cycle de vie des produits et exposer les metriques associees.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -35,6 +38,11 @@ public class ProductService {
     private final MeterRegistry meterRegistry;
     private final OrderClient orderClient;
 
+    /**
+     * Recupere tous les produits disponibles en base.
+     *
+     * @return liste complete des produits au format DTO
+     */
     public List<ProductResponseDTO> getAllProducts() {
         List<Product> products = productRepository.findAll();
         return products.stream()
@@ -42,11 +50,25 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Retourne un produit a partir de son identifiant.
+     *
+     * @param id identifiant du produit
+     * @return produit trouve au format DTO
+     * @throws ResourceNotFoundException si aucun produit ne correspond
+     */
     public ProductResponseDTO getProductById(Long id) {
         Product product = findProductOrThrow(id);
         return productMapper.toDto(product);
     }
 
+    /**
+     * Cree un nouveau produit apres verification d'unicite du nom.
+     *
+     * @param dto payload de creation
+     * @return produit cree au format DTO
+     * @throws ResourceAlreadyExistsException si un produit porte deja ce nom
+     */
     @Transactional
     public ProductResponseDTO createProduct(@Valid ProductRequestDTO dto) {
         if (productRepository.existsByNameIgnoreCase(dto.getName())) {
@@ -61,6 +83,14 @@ public class ProductService {
         return productMapper.toDto(saved);
     }
 
+    /**
+     * Met a jour les informations d'un produit existant.
+     *
+     * @param id  identifiant du produit a modifier
+     * @param dto payload contenant les nouvelles valeurs
+     * @return produit mis a jour au format DTO
+     * @throws ResourceNotFoundException si le produit n'existe pas
+     */
     @Transactional
     public ProductResponseDTO updateProduct(Long id, @Valid ProductRequestDTO dto) {
         Product existing = findProductOrThrow(id);
@@ -72,17 +102,30 @@ public class ProductService {
         return productMapper.toDto(updated);
     }
 
+    /**
+     * Supprime un produit si aucune commande ne le reference.
+     *
+     * @param id identifiant du produit a supprimer
+     * @throws ResourceNotFoundException si le produit est introuvable
+     * @throws IllegalStateException     si le produit est utilise dans une commande
+     */
     @Transactional
     public void deleteProduct(Long id) {
         Product existing = findProductOrThrow(id);
-        // Règle métier: ne pas supprimer si le produit est présent dans une commande
+        // Regle metier: ne pas supprimer si le produit est present dans une commande
         if (orderClient.isProductInAnyOrder(id)) {
-            throw new IllegalStateException("Le produit ne peut pas etre supprime car il est utilise dans une commande");
+            throw new IllegalStateException("Le produit ne peut pas etre supprime car il est utilise dans une commande Test Test");
         }
         productRepository.delete(existing);
         incrementCounter("products.deleted");
     }
 
+    /**
+     * Recherche les produits dont le nom contient le fragment fourni (ignore la casse).
+     *
+     * @param name fragment de nom a rechercher
+     * @return produits correspondants au format DTO
+     */
     public List<ProductResponseDTO> searchProductsByName(String name) {
         List<Product> products = productRepository.findByNameContainingIgnoreCase(name);
         return products.stream()
@@ -90,6 +133,12 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Recupere les produits appartenant a une categorie specifique.
+     *
+     * @param category categorie cible
+     * @return produits de la categorie au format DTO
+     */
     public List<ProductResponseDTO> getProductsByCategory(Category category) {
         List<Product> products = productRepository.findByCategory(category);
         return products.stream()
@@ -97,6 +146,11 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Recupere les produits actifs disposant d'un stock positif.
+     *
+     * @return produits disponibles au format DTO
+     */
     public List<ProductResponseDTO> getAvailableProducts() {
         List<Product> products = productRepository.findByStockGreaterThanAndActiveTrue(0);
         return products.stream()
@@ -104,6 +158,14 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Met a jour le stock d'un produit specifique.
+     *
+     * @param id    identifiant du produit
+     * @param stock nouvelle quantite de stock (>= 0)
+     * @return produit mis a jour au format DTO
+     * @throws ResourceNotFoundException si le produit n'existe pas
+     */
     @Transactional
     public ProductResponseDTO updateStock(Long id,
                                           @NotNull(message = "Le stock est obligatoire")
@@ -116,11 +178,23 @@ public class ProductService {
         return productMapper.toDto(saved);
     }
 
+    /**
+     * Charge un produit ou leve une exception descriptive si absent.
+     *
+     * @param id identifiant recherche
+     * @return entite produit correspondante
+     * @throws ResourceNotFoundException si aucun produit ne correspond
+     */
     private Product findProductOrThrow(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", id));
     }
 
+    /**
+     * Incremente le compteur de creations en ajoutant une etiquette de categorie.
+     *
+     * @param category categorie du produit cree
+     */
     private void incrementCreatedCounter(Category category) {
         Counter.builder("products.created")
                 .description("Nombre de produits crees")
@@ -129,6 +203,11 @@ public class ProductService {
                 .increment();
     }
 
+    /**
+     * Incremente un compteur micrometer generique.
+     *
+     * @param name nom du compteur
+     */
     private void incrementCounter(String name) {
         Counter.builder(name)
                 .description("Compteur automatique pour les produits")
@@ -136,3 +215,4 @@ public class ProductService {
                 .increment();
     }
 }
+

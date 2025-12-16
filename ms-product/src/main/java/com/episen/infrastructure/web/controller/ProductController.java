@@ -325,6 +325,12 @@ public class ProductController {
         }
     }
 
+    /**
+     * Gere les erreurs de type pour les parametres de requete.
+     *
+     * @param ex exception liee a la conversion
+     * @return reponse avec statut 400 et detail de l'erreur
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         String parameter = ex.getName();
@@ -333,6 +339,13 @@ public class ProductController {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
     }
 
+    /**
+     * Construit une reponse d'erreur standardisee.
+     *
+     * @param status  code HTTP a retourner
+     * @param message message explicatif
+     * @return entite de reponse avec le corps {@link ErrorResponse}
+     */
     private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, String message) {
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())

@@ -7,6 +7,9 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.stereotype.Component;
 
+/**
+ * Indicateur de sante qui signale les produits dont le stock passe sous un seuil.
+ */
 @Component
 @RequiredArgsConstructor
 public class LowStockHealthIndicator extends AbstractHealthIndicator {
@@ -15,6 +18,11 @@ public class LowStockHealthIndicator extends AbstractHealthIndicator {
 
     private final ProductRepository productRepository;
 
+    /**
+     * Construit la reponse de sante en fonction du nombre de produits sous le seuil.
+     *
+     * @param builder constructeur de l'etat de sante
+     */
     @Override
     protected void doHealthCheck(Health.Builder builder) {
         long lowStockCount = productRepository.countByStockLessThan(LOW_STOCK_THRESHOLD);

@@ -20,6 +20,12 @@ public class OrderClient {
     private final RestTemplate restTemplate;
     private final String orderServiceBaseUrl;
 
+    /**
+     * Construit le client REST pour communiquer avec le microservice de commandes.
+     *
+     * @param restTemplateBuilder constructeur de RestTemplate
+     * @param orderServiceBaseUrl URL racine du service commandes
+     */
     public OrderClient(
             RestTemplateBuilder restTemplateBuilder,
             @Value("${order.service.url:http://localhost:8083}") String orderServiceBaseUrl) {

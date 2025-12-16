@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Representation des produits retournee aux consommateurs de l'API.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
