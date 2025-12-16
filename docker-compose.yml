@@ -1,4 +1,17 @@
 services:
+  traefik:
+    image: traefik:v3.4
+    container_name: traefik
+    ports:
+      - "80:80"
+      - "8080:8080"  # Dashboard Traefik
+    volumes:
+      - ./reverse-proxy/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./reverse-proxy/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - ecommerce
+    restart: unless-stopped
+
   ms-membership:
     build:
       context: ./ms-membership
@@ -96,13 +109,15 @@ services:
       - ./env.local
     environment:
       PORT: ${MS_UI_PORT:-5173}
-      VITE_MEMBERSHIP_API: ${VITE_MEMBERSHIP_API:-http://localhost:8081}
-      VITE_PRODUCT_API: ${VITE_PRODUCT_API:-http://localhost:8082}
-      VITE_ORDER_API: ${VITE_ORDER_API:-http://localhost:8083}
+      VITE_MEMBERSHIP_API: http://localhost/api/membership
+      VITE_PRODUCT_API: http://localhost/api/product
+      VITE_ORDER_API: http://localhost/api/order
     ports:
       - "${MS_UI_PORT:-5173}:5173"
     networks:
       - ecommerce
+    depends_on:
+      - traefik
 
 networks:
   ecommerce:

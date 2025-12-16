@@ -1,6 +1,6 @@
-const MEMBERSHIP_API = import.meta.env.VITE_MEMBERSHIP_API ?? "http://localhost:8081";
-const PRODUCT_API = import.meta.env.VITE_PRODUCT_API ?? "http://localhost:8082";
-const ORDER_API = import.meta.env.VITE_ORDER_API ?? "http://localhost:8083";
+const MEMBERSHIP_API = import.meta.env.VITE_MEMBERSHIP_API ?? "http://localhost/api/membership";
+const PRODUCT_API = import.meta.env.VITE_PRODUCT_API ?? "http://localhost/api/product";
+const ORDER_API = import.meta.env.VITE_ORDER_API ?? "http://localhost/api/order";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -66,7 +66,7 @@ export const api = {
     create: (payload: any) => request(MEMBERSHIP_API, "/api/v1/users", "POST", payload),
     update: (id: number, payload: any) => request(MEMBERSHIP_API, `/api/v1/users/${id}`, "PUT", payload),
     delete: (id: number) => request<void>(MEMBERSHIP_API, `/api/v1/users/${id}`, "DELETE"),
-    search: (lastName: string) => request<any[]>(MEMBERSHIP_API, `/api/v1/users/search?lastName=${encodeURIComponent(lastName)}`),
+    search: (name: string) => request<any[]>(MEMBERSHIP_API, `/api/v1/users/search?name=${encodeURIComponent(name)}`),
     active: () => request<any[]>(MEMBERSHIP_API, "/api/v1/users/active"),
     deactivate: (id: number) => request<any>(MEMBERSHIP_API, `/api/v1/users/${id}/deactivate`, "PATCH")
   },
