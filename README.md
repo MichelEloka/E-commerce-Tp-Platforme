@@ -43,31 +43,7 @@ Cette plateforme e-commerce est composée de **3 microservices indépendants** c
 
 ## Architecture
 
-```
-┌─────────────┐
-│   Traefik   │  Reverse Proxy (Port 80)
-│   v3.4      │
-└──────┬──────┘
-       │
-       ├─────────────┬─────────────┬─────────────┐
-       │             │             │             │
-┌──────▼──────┐┌────▼─────┐┌─────▼──────┐┌─────▼─────┐
-│ms-membership││ms-product││  ms-order  ││   UI      │
-│   :8081     ││  :8082   ││   :8083    ││  :5173    │
-└──────┬──────┘└────┬─────┘└─────┬──────┘└───────────┘
-       │            │             │
-       └────────────┴─────────────┘
-                    │
-            ┌───────▼────────┐
-            │   PostgreSQL   │
-            │      :5432     │
-            └────────────────┘
-
-┌─────────────┐  ┌──────────┐  ┌─────────┐
-│ Prometheus  │  │ Grafana  │  │pgAdmin  │
-│    :9090    │  │  :3000   │  │  :5050  │
-└─────────────┘  └──────────┘  └─────────┘
-```
+![Architecture microservices](diagram-tp1-orchestrationMS.svg)
 
 ### Services
 
