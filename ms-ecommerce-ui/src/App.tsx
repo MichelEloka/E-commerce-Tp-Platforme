@@ -1,24 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { Routes, Route, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Sun, Moon, Plus, Package, ShoppingCart, Users as UsersIcon } from "lucide-react";
 import { api } from "./api/client";
 import type { Order, Product, User } from "./api/types";
-import { Panel } from "./components/Panel";
-import { Badge } from "./components/Badge";
-import { StatCard } from "./components/StatCard";
-import { ProductFields } from "./components/ProductFields";
-import { UserFields } from "./components/UserFields";
-import { ProductCard } from "./components/ProductCard";
-import { UserCard } from "./components/UserCard";
+import {
+  DashboardPage,
+  ProductsPage,
+  NewProductPage,
+  ProductDetailPage,
+  ProductEditPage,
+  OrdersPage,
+  NewOrderPage,
+  OrderDetailPage,
+  UsersPage,
+  NewUserPage,
+  UserDetailPage,
+  UserEditPage
+} from "./pages";
 
-type View = "dashboard" | "products" | "orders" | "users";
 
 const categories: Product["category"][] = ["ELECTRONICS", "BOOKS", "FOOD", "OTHER"];
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [view, setView] = useState<View>("products");
   const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -36,23 +46,41 @@ function App() {
     category: "ELECTRONICS"
   });
   const [newUser, setNewUser] = useState({ firstName: "", lastName: "", email: "" });
-  const [showNewProduct, setShowNewProduct] = useState(false);
-  const [showNewUser, setShowNewUser] = useState(false);
-  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
-  const [editProduct, setEditProduct] = useState<Partial<Product> | null>(null);
   const [userSearch, setUserSearch] = useState("");
   const [userActiveOnly, setUserActiveOnly] = useState(false);
-  const [detailUser, setDetailUser] = useState<User | null>(null);
-  const [editUser, setEditUser] = useState<Partial<User> | null>(null);
   const [userIdLookup, setUserIdLookup] = useState("");
+  const [newOrder, setNewOrder] = useState<{ userId: number | ""; shippingAddress: string; items: Array<{ productId: number | ""; quantity: number }> }>({
+    userId: "",
+    shippingAddress: "",
+    items: []
+  });
+  const [filterOrderStatus, setFilterOrderStatus] = useState<string>("");
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
 
   const lowStock = useMemo(() => products.filter(p => p.stock < 5).length, [products]);
   const totalStock = useMemo(() => products.reduce((acc, p) => acc + (p.stock ?? 0), 0), [products]);
 
-  async function loadProducts() {
+  const orderStats = useMemo(() => {
+    const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const pendingOrders = orders.filter(o => o.status === "PENDING").length;
+    const deliveredOrders = orders.filter(o => o.status === "DELIVERED").length;
+    return { totalRevenue, pendingOrders, deliveredOrders };
+  }, [orders]);
+
+  const usersMap = useMemo(() => {
+    const map = new Map<number, string>();
+    users.forEach(u => {
+      const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || `User #${u.id}`;
+      map.set(u.id, fullName);
+    });
+    return map;
+  }, [users]);
+
+  const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const data = search ? await api.products.search(search) : await api.products.list();
+      const data = await api.products.list();
+      setAllProducts(data as Product[]);
       setProducts(data as Product[]);
     } catch (e) {
       const msg = (e as Error).message;
@@ -61,9 +89,9 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     try {
       const data = await api.users.list();
       setUsers(data as User[]);
@@ -72,9 +100,9 @@ function App() {
       setError(msg);
       toast.error(msg);
     }
-  }
+  }, []);
 
-  async function loadUsersActive() {
+  const loadUsersActive = useCallback(async () => {
     try {
       const data = await api.users.active();
       setUsers(data as User[]);
@@ -83,9 +111,9 @@ function App() {
       setError(msg);
       toast.error(msg);
     }
-  }
+  }, []);
 
-  async function searchUsers() {
+  const searchUsers = useCallback(async () => {
     try {
       setLoading(true);
       if (!userSearch) {
@@ -101,18 +129,22 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [userSearch, userActiveOnly, loadUsersActive, loadUsers]);
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     try {
+      setLoading(true);
       const data = await api.orders.list();
       setOrders(data as Order[]);
+      setError(null);
     } catch (e) {
       const msg = (e as Error).message;
       setError(msg);
-      toast.error(msg);
+      console.error("Error loading orders:", msg);
+    } finally {
+      setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     loadProducts();
@@ -134,6 +166,9 @@ function App() {
         stock: Number(newProduct.stock)
       });
       await loadProducts();
+      setNewProduct({ name: "", description: "", price: 0, stock: 0, category: "ELECTRONICS" });
+      toast.success("Produit créé avec succès");
+      navigate("/products");
     } catch (e) {
       const msg = (e as Error).message;
       setError(msg);
@@ -166,33 +201,21 @@ function App() {
     }
   }
 
-  async function handleViewDetails(id: number) {
-    try {
-      const data = await api.products.get(id);
-      setDetailProduct(data as Product);
-      setEditProduct(null);
-    } catch (e) {
-      const msg = (e as Error).message;
-      setError(msg);
-      toast.error(msg);
-    }
-  }
-
-  async function handleSaveEdit() {
-    if (!editProduct || !editProduct.id) return;
+  async function handleSaveProductEdit(id: number, product: Partial<Product>) {
     try {
       setLoading(true);
-      await api.products.update(editProduct.id, {
-        name: editProduct.name,
-        description: editProduct.description,
-        price: editProduct.price,
-        stock: editProduct.stock,
-        category: editProduct.category,
-        imageUrl: editProduct.imageUrl,
-        active: editProduct.active
+      await api.products.update(id, {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        stock: product.stock,
+        category: product.category,
+        imageUrl: product.imageUrl,
+        active: product.active
       });
       await loadProducts();
-      await handleViewDetails(editProduct.id);
+      toast.success("Produit mis à jour avec succès");
+      navigate(`/products/${id}`);
     } catch (e) {
       const msg = (e as Error).message;
       setError(msg);
@@ -202,36 +225,36 @@ function App() {
     }
   }
 
-  async function applyFilters() {
-    try {
-      setLoading(true);
-      let data: Product[] = [];
-      if (filterAvailable) {
-        data = (await api.products.available()) as Product[];
-        if (filterCategory) {
-          data = data.filter(p => p.category === filterCategory);
-        }
-      } else if (filterCategory) {
-        data = (await api.products.byCategory(filterCategory)) as Product[];
-      } else if (search) {
-        data = (await api.products.search(search)) as Product[];
-      } else {
-        data = (await api.products.list()) as Product[];
-      }
-      if (filterActive === "active") {
-        data = data.filter(p => p.active !== false);
-      } else if (filterActive === "inactive") {
-        data = data.filter(p => p.active === false);
-      }
-      setProducts(data);
-    } catch (e) {
-      const msg = (e as Error).message;
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
+  // Client-side filtering using useMemo for instant results
+  const filteredProducts = useMemo(() => {
+    let filtered = allProducts;
+
+    // Filter by search text
+    if (search) {
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase())
+      );
     }
-  }
+
+    // Filter by category
+    if (filterCategory) {
+      filtered = filtered.filter(p => p.category === filterCategory);
+    }
+
+    // Filter by availability (stock > 0)
+    if (filterAvailable) {
+      filtered = filtered.filter(p => p.stock > 0);
+    }
+
+    // Filter by active status
+    if (filterActive === "active") {
+      filtered = filtered.filter(p => p.active !== false);
+    } else if (filterActive === "inactive") {
+      filtered = filtered.filter(p => p.active === false);
+    }
+
+    return filtered;
+  }, [allProducts, search, filterCategory, filterAvailable, filterActive]);
 
   async function handleCreateUser() {
     try {
@@ -239,6 +262,8 @@ function App() {
       await api.users.create(newUser);
       setNewUser({ firstName: "", lastName: "", email: "" });
       await (userActiveOnly ? loadUsersActive() : loadUsers());
+      toast.success("Utilisateur créé avec succès");
+      navigate("/users");
     } catch (e) {
       const msg = (e as Error).message;
       setError(msg);
@@ -248,30 +273,18 @@ function App() {
     }
   }
 
-  async function handleViewUser(id: number) {
-    try {
-      const data = await api.users.get(id);
-      setDetailUser(data as User);
-      setEditUser(null);
-    } catch (e) {
-      const msg = (e as Error).message;
-      setError(msg);
-      toast.error(msg);
-    }
-  }
-
-  async function handleSaveUserEdit() {
-    if (!editUser || !editUser.id) return;
+  async function handleSaveUserEdit(id: number, user: Partial<User>) {
     try {
       setLoading(true);
-      await api.users.update(editUser.id, {
-        firstName: editUser.firstName,
-        lastName: editUser.lastName,
-        email: editUser.email,
-        phoneNumber: editUser.phoneNumber
+      await api.users.update(id, {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phoneNumber: user.phoneNumber
       });
       await (userActiveOnly ? loadUsersActive() : loadUsers());
-      await handleViewUser(editUser.id);
+      toast.success("Utilisateur mis à jour avec succès");
+      navigate(`/users/${id}`);
     } catch (e) {
       const msg = (e as Error).message;
       setError(msg);
@@ -286,10 +299,8 @@ function App() {
     try {
       await api.users.delete(id);
       await (userActiveOnly ? loadUsersActive() : loadUsers());
-      if (detailUser?.id === id) {
-        setDetailUser(null);
-        setEditUser(null);
-      }
+      toast.success("Utilisateur supprimé");
+      navigate("/users");
     } catch (e) {
       const msg = (e as Error).message;
       setError(msg);
@@ -301,15 +312,82 @@ function App() {
     try {
       await api.users.deactivate(id);
       await (userActiveOnly ? loadUsersActive() : loadUsers());
-      if (detailUser?.id === id) {
-        await handleViewUser(id);
-      }
+      toast.success("Utilisateur désactivé");
     } catch (e) {
       const msg = (e as Error).message;
       setError(msg);
       toast.error(msg);
     }
   }
+
+  async function handleCreateOrder() {
+    if (!newOrder.userId || newOrder.items.length === 0) {
+      toast.error("Veuillez sélectionner un utilisateur et ajouter au moins un article");
+      return;
+    }
+    try {
+      setLoading(true);
+      await api.orders.create({
+        userId: Number(newOrder.userId),
+        shippingAddress: newOrder.shippingAddress,
+        items: newOrder.items.map(item => ({
+          productId: Number(item.productId),
+          quantity: item.quantity
+        }))
+      });
+      setNewOrder({ userId: "", shippingAddress: "", items: [] });
+      await loadOrders();
+      toast.success("Commande créée avec succès");
+      navigate("/orders");
+    } catch (e) {
+      const msg = (e as Error).message;
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpdateOrderStatus(id: number, status: Order["status"]) {
+    try {
+      await api.orders.updateStatus(id, status);
+      await loadOrders();
+      toast.success(`Statut mis à jour: ${status}`);
+    } catch (e) {
+      const msg = (e as Error).message;
+      setError(msg);
+      toast.error(msg);
+    }
+  }
+
+  async function handleCancelOrder(id: number) {
+    if (!confirm("Annuler cette commande ?")) return;
+    try {
+      await api.orders.delete(id);
+      await loadOrders();
+      toast.success("Commande annulée");
+    } catch (e) {
+      const msg = (e as Error).message;
+      setError(msg);
+      toast.error(msg);
+    }
+  }
+
+  const applyOrderFilters = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = filterOrderStatus
+        ? await api.orders.byStatus(filterOrderStatus)
+        : await api.orders.list();
+      setOrders(data as Order[]);
+    } catch (e) {
+      const msg = (e as Error).message;
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterOrderStatus]);
 
   const createdByCategory = useMemo(() => {
     const map: Record<string, number> = {};
@@ -325,401 +403,196 @@ function App() {
   return (
     <div className="app-shell">
       <ToastContainer position="bottom-right" theme={theme === "dark" ? "dark" : "light"} transition={Slide} />
-      <header className="app-header sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold">E-commerce Manager</h1>
-            <p className="text-sm text-muted">Pilotage des services Membership, Product, Order</p>
+      <header className="app-header sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex items-center gap-8">
+              <div>
+                <h1 className="text-xl font-bold">E-commerce Manager</h1>
+                <p className="text-xs text-muted mt-0.5">Plateforme de gestion</p>
+              </div>
+
+              <nav className="hidden md:flex items-center gap-1">
+                <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                  Dashboard
+                </NavLink>
+                <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                  Produits
+                </NavLink>
+                <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                  Commandes
+                </NavLink>
+                <NavLink to="/users" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+                  Utilisateurs
+                </NavLink>
+              </nav>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <button
+                  className="btn-primary flex items-center gap-2"
+                  onClick={() => setShowCreateMenu(!showCreateMenu)}
+                  onBlur={() => setTimeout(() => setShowCreateMenu(false), 200)}
+                >
+                  <Plus size={18} />
+                  <span className="hidden sm:inline">Créer</span>
+                </button>
+
+                {showCreateMenu && (
+                  <div className="create-menu">
+                    <button
+                      className="create-menu-item"
+                      onClick={() => { navigate("/products/new"); setShowCreateMenu(false); }}
+                    >
+                      <Package size={16} />
+                      <span>Nouveau produit</span>
+                    </button>
+                    <button
+                      className="create-menu-item"
+                      onClick={() => { navigate("/orders/new"); setShowCreateMenu(false); }}
+                    >
+                      <ShoppingCart size={16} />
+                      <span>Nouvelle commande</span>
+                    </button>
+                    <button
+                      className="create-menu-item"
+                      onClick={() => { navigate("/users/new"); setShowCreateMenu(false); }}
+                    >
+                      <UsersIcon size={16} />
+                      <span>Nouvel utilisateur</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button className="btn-ghost icon-only" onClick={() => setTheme(t => (t === "dark" ? "light" : "dark"))}>
+                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="btn-ghost" onClick={() => { setView("products"); setShowNewProduct(s => !s); }}>
-              {showNewProduct ? "Masquer produit" : "Add product"}
-            </button>
-            <button className="btn-ghost" onClick={() => { setView("users"); setShowNewUser(s => !s); }}>
-              {showNewUser ? "Masquer user" : "Add user"}
-            </button>
-            <button className="btn-ghost theme-toggle" onClick={() => setTheme(t => (t === "dark" ? "light" : "dark"))}>
-              {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
-            </button>
-          </div>
+
+          {/* Mobile navigation */}
+          <nav className="md:hidden flex items-center gap-1 mt-4 overflow-x-auto pb-1">
+            <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              Dashboard
+            </NavLink>
+            <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              Produits
+            </NavLink>
+            <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              Commandes
+            </NavLink>
+            <NavLink to="/users" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
+              Utilisateurs
+            </NavLink>
+          </nav>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        <div className="view-toggle card p-2 flex gap-2 flex-wrap">
-          {(["dashboard", "products", "orders", "users"] as View[]).map(v => (
-            <button key={v} onClick={() => setView(v)} className={`tab ${view === v ? "active" : ""}`}>
-              {v}
-            </button>
-          ))}
-        </div>
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
-        {view === "dashboard" && (
-          <div className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-4">
-              <StatCard label="Produits" value={products.length} hint={`${lowStock} à stock bas (<5)`} />
-              <StatCard label="Utilisateurs" value={users.length} />
-              <StatCard label="Stock total" value={totalStock} />
-            </div>
-
-            <Panel title="Produits par catégorie">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {categories.map(cat => (
-                  <div key={cat} className="card p-3 text-center">
-                    <div className="text-xs text-slate-400 uppercase">{cat}</div>
-                    <div className="text-xl font-bold text-slate-50">{createdByCategory[cat] ?? 0}</div>
-                  </div>
-                ))}
-              </div>
-            </Panel>
-          </div>
-        )}
-
-        {view === "products" && (
-          <div className="space-y-4">
-            {showNewProduct && (
-              <Panel
-                title="Nouveau produit"
-                actions={<span className="text-xs text-slate-400">{loading ? "Chargement..." : ""}</span>}
-              >
-                <ProductFields
-                  value={newProduct}
-                  categories={categories}
-                  onChange={setNewProduct}
-                  includeActive
-                />
-                <div className="flex justify-end mt-3">
-                  <button className="btn-primary" onClick={handleCreateProduct} disabled={loading}>
-                    Créer
-                  </button>
-                </div>
-              </Panel>
-            )}
-
-            <Panel
-              title="Catalogue produits"
-              actions={
-                <div className="flex gap-2">
-                  <input
-                    className="card px-3 py-2"
-                    placeholder="Rechercher par nom"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                  <button className="btn-primary" onClick={loadProducts}>
-                    Rechercher
-                  </button>
-                  <button className="btn-ghost" onClick={() => setShowFilters(s => !s)}>
-                    {showFilters ? "Fermer filtres" : "Filtrer"}
-                  </button>
-                </div>
-              }
-              >
-              {showFilters && (
-                <div className="card p-2 mb-3 flex flex-wrap gap-2 items-center text-sm shadow-none border-dashed">
-                  <label className="field w-48">
-                    <span>Catégorie</span>
-                    <select
-                      className="card px-3 py-2"
-                      value={filterCategory}
-                      onChange={e => setFilterCategory(e.target.value)}
-                    >
-                      <option value="">Toutes</option>
-                      {categories.map(c => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="field flex-row items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={filterAvailable}
-                      onChange={e => setFilterAvailable(e.target.checked)}
-                    />
-                    <span>En stock uniquement</span>
-                  </label>
-                  <label className="field w-40">
-                    <span>Statut</span>
-                    <select
-                      className="card px-3 py-2"
-                      value={filterActive}
-                      onChange={e => setFilterActive(e.target.value as "all" | "active" | "inactive")}
-                    >
-                      <option value="all">Tous</option>
-                      <option value="active">Actifs</option>
-                      <option value="inactive">Inactifs</option>
-                    </select>
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      className="btn-ghost subtle"
-                      onClick={() => { setFilterCategory(""); setFilterAvailable(false); setFilterActive("all"); applyFilters(); }}
-                    >
-                      Réinitialiser
-                    </button>
-                    <button className="btn-primary" onClick={applyFilters}>
-                      Appliquer
-                    </button>
-                  </div>
-                </div>
-              )}
-                <div className="grid gap-3">
-                  {products.map(p => (
-                    <ProductCard
-                      key={p.id}
-                      product={p}
-                      onUpdateStock={handleUpdateStock}
-                      onViewDetails={handleViewDetails}
-                      onDelete={handleDeleteProduct}
-                    />
-                  ))}
-                </div>
-              </Panel>
-            </div>
-        )}
-
-        {view === "orders" && (
-          <Panel title="Commandes">
-            <div className="grid gap-3">
-              {orders.length === 0 && <div className="text-slate-400">Aucune commande pour le moment.</div>}
-              {orders.map(o => (
-                <div key={o.id} className="card p-3 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold">Commande #{o.id}</div>
-                    <Badge color={o.status === "CANCELLED" ? "red" : o.status === "PENDING" ? "amber" : "green"}>
-                      {o.status}
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-slate-400">Utilisateur #{o.userId}</div>
-                  <div className="text-sm text-slate-200 font-semibold">Total : {o.totalAmount} €</div>
-                  <div className="text-xs text-slate-400">Livraison : {o.shippingAddress}</div>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        )}
-
-        {view === "users" && (
-          <div className="space-y-4">
-            <div className="card p-3 flex flex-wrap gap-3 items-center">
-              <input
-                className="card px-3 py-2"
-                placeholder="Rechercher par nom"
-                value={userSearch}
-                onChange={e => setUserSearch(e.target.value)}
-              />
-              <div className="flex items-center gap-2">
-                <input
-                  className="card px-3 py-2 w-32"
-                  placeholder="ID utilisateur"
-                  value={userIdLookup}
-                  onChange={e => setUserIdLookup(e.target.value)}
-                />
-                <button className="btn-ghost subtle" onClick={() => userIdLookup && handleViewUser(Number(userIdLookup))}>
-                  Charger ID
-                </button>
-              </div>
-              <label className="field flex-row items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={userActiveOnly}
-                  onChange={e => {
-                    setUserActiveOnly(e.target.checked);
-                    if (e.target.checked) loadUsersActive(); else loadUsers();
-                  }}
-                />
-                <span>Actifs seulement</span>
-              </label>
-              <div className="flex gap-2">
-                <button className="btn-primary" onClick={searchUsers}>Rechercher</button>
-                <button className="btn-ghost subtle" onClick={() => { setUserSearch(""); setUserActiveOnly(false); loadUsers(); }}>
-                  Réinitialiser
-                </button>
-              </div>
-            </div>
-            {showNewUser && (
-              <Panel title="Nouvel utilisateur">
-                <UserFields value={newUser} onChange={setNewUser} />
-                <div className="flex justify-end mt-3">
-                  <button className="btn-primary" onClick={handleCreateUser} disabled={loading}>
-                    Créer l'utilisateur
-                  </button>
-                </div>
-              </Panel>
-            )}
-
-            <Panel title="Utilisateurs">
-              <div className="grid gap-3">
-                {users.map(u => (
-                  <UserCard
-                    key={u.id}
-                    user={u}
-                    onView={handleViewUser}
-                    onDelete={handleDeleteUser}
-                    onToggleActive={(id, active) => {
-                      if (active) {
-                        handleDeactivateUser(id);
-                      } else {
-                        handleViewUser(id); // fallback to edit since no activate endpoint
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            </Panel>
-          </div>
-        )}
+        <Routes>
+          <Route path="/" element={
+            <DashboardPage
+              orders={orders}
+              products={products}
+              users={users}
+              usersMap={usersMap}
+              orderStats={orderStats}
+              lowStock={lowStock}
+            />
+          } />
+          <Route path="/products" element={
+            <ProductsPage
+              search={search}
+              setSearch={setSearch}
+              filteredProducts={filteredProducts}
+              onDeleteProduct={handleDeleteProduct}
+            />
+          } />
+          <Route path="/products/new" element={
+            <NewProductPage
+              newProduct={newProduct}
+              setNewProduct={setNewProduct}
+              loading={loading}
+              onCreateProduct={handleCreateProduct}
+            />
+          } />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/products/:id/edit" element={
+            <ProductEditPage
+              loading={loading}
+              onSaveProductEdit={handleSaveProductEdit}
+            />
+          } />
+          <Route path="/orders" element={
+            <OrdersPage
+              filterOrderStatus={filterOrderStatus}
+              setFilterOrderStatus={setFilterOrderStatus}
+              orders={orders}
+              usersMap={usersMap}
+              onApplyOrderFilters={applyOrderFilters}
+              onLoadOrders={loadOrders}
+              onUpdateOrderStatus={handleUpdateOrderStatus}
+              onCancelOrder={handleCancelOrder}
+            />
+          } />
+          <Route path="/orders/new" element={
+            <NewOrderPage
+              newOrder={newOrder}
+              setNewOrder={setNewOrder}
+              users={users}
+              products={products}
+              loading={loading}
+              onCreateOrder={handleCreateOrder}
+            />
+          } />
+          <Route path="/orders/:id" element={
+            <OrderDetailPage
+              usersMap={usersMap}
+              onUpdateOrderStatus={handleUpdateOrderStatus}
+              onCancelOrder={handleCancelOrder}
+            />
+          } />
+          <Route path="/users" element={
+            <UsersPage
+              userSearch={userSearch}
+              setUserSearch={setUserSearch}
+              userActiveOnly={userActiveOnly}
+              setUserActiveOnly={setUserActiveOnly}
+              userIdLookup={userIdLookup}
+              setUserIdLookup={setUserIdLookup}
+              users={users}
+              onSearchUsers={searchUsers}
+              onLoadUsersActive={loadUsersActive}
+              onLoadUsers={loadUsers}
+              onDeleteUser={handleDeleteUser}
+              onDeactivateUser={handleDeactivateUser}
+            />
+          } />
+          <Route path="/users/new" element={
+            <NewUserPage
+              newUser={newUser}
+              setNewUser={setNewUser}
+              loading={loading}
+              onCreateUser={handleCreateUser}
+            />
+          } />
+          <Route path="/users/:id" element={
+            <UserDetailPage
+              onDeactivateUser={handleDeactivateUser}
+              onDeleteUser={handleDeleteUser}
+            />
+          } />
+          <Route path="/users/:id/edit" element={
+            <UserEditPage
+              loading={loading}
+              onSaveUserEdit={handleSaveUserEdit}
+            />
+          } />
+        </Routes>
       </main>
-
-      {detailProduct && (
-        <div className="modal-backdrop" onClick={() => { setDetailProduct(null); setEditProduct(null); }}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">
-                {editProduct ? "Modifier le produit" : detailProduct.name}
-              </h3>
-              <div className="flex gap-2">
-                {editProduct && (
-                  <button className="btn-ghost subtle" onClick={() => setEditProduct(null)}>
-                    Back
-                  </button>
-                )}
-                {!editProduct && (
-                  <button className="btn-ghost subtle" onClick={() => setEditProduct(detailProduct)}>
-                    Modifier
-                  </button>
-                )}
-                <button className="btn-ghost subtle" onClick={() => { setDetailProduct(null); setEditProduct(null); }}>
-                  Fermer
-                </button>
-              </div>
-            </div>
-
-            {!editProduct && (
-              <div className="flex flex-col md:flex-row gap-4">
-                {detailProduct.imageUrl ? (
-                  <img src={detailProduct.imageUrl} alt={detailProduct.name} className="product-img large" loading="lazy" />
-                ) : (
-                  <div className="product-img large placeholder">{detailProduct.name?.charAt(0) ?? "?"}</div>
-                )}
-                <div className="space-y-2 text-sm">
-                  <div className="text-base font-semibold">{detailProduct.name}</div>
-                  <div className="text-muted">{detailProduct.description}</div>
-                  <div className="flex gap-2 items-center">
-                    <Badge color={detailProduct.stock < 5 ? "amber" : "green"}>Stock {detailProduct.stock}</Badge>
-                    <Badge>{detailProduct.category}</Badge>
-                    {detailProduct.active === false && <Badge color="red">Inactif</Badge>}
-                  </div>
-                  <div className="text-base font-bold">{detailProduct.price.toFixed(2)} €</div>
-                  <div className="text-xs text-muted">
-                    Créé le {detailProduct.createdAt ? new Date(detailProduct.createdAt).toLocaleString() : "N/A"}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {editProduct && (
-              <div className="space-y-3">
-                <ProductFields
-                  value={editProduct}
-                  categories={categories}
-                  onChange={setEditProduct}
-                  includeActive
-                />
-                <div className="flex justify-end gap-2">
-                  <button className="btn-ghost subtle" onClick={() => setEditProduct(null)}>
-                    Annuler
-                  </button>
-                  <button className="btn-primary" onClick={handleSaveEdit} disabled={loading}>
-                    Sauvegarder
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {detailUser && (
-        <div className="modal-backdrop" onClick={() => { setDetailUser(null); setEditUser(null); }}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">
-                {editUser ? "Modifier l'utilisateur" : detailUser.firstName ? `${detailUser.firstName} ${detailUser.lastName ?? ""}` : `Utilisateur #${detailUser.id}`}
-              </h3>
-              <div className="flex gap-2">
-                {editUser && (
-                  <button className="btn-ghost subtle" onClick={() => setEditUser(null)}>Back</button>
-                )}
-                {!editUser && (
-                  <button className="btn-ghost subtle" onClick={() => setEditUser(detailUser)}>Modifier</button>
-                )}
-                <button className="btn-ghost subtle" onClick={() => { setDetailUser(null); setEditUser(null); }}>Fermer</button>
-              </div>
-            </div>
-
-            {!editUser && (
-              <div className="space-y-2 text-sm">
-                <div className="text-base font-semibold">{detailUser.firstName ? `${detailUser.firstName} ${detailUser.lastName ?? ""}` : `ID ${detailUser.id}`}</div>
-                <div className="text-muted">{detailUser.email}</div>
-                {detailUser.phoneNumber && <div className="text-muted">{detailUser.phoneNumber}</div>}
-              </div>
-            )}
-
-            {editUser && (
-              <div className="space-y-3">
-                <div className="grid md:grid-cols-3 gap-3">
-                  <label className="field">
-                    <span>Prénom</span>
-                    <input
-                      className="card px-3 py-2"
-                      value={editUser.firstName ?? ""}
-                      onChange={e => setEditUser(u => ({ ...u, firstName: e.target.value }))}
-                    />
-                  </label>
-                  <label className="field">
-                    <span>Nom</span>
-                    <input
-                      className="card px-3 py-2"
-                      value={editUser.lastName ?? ""}
-                      onChange={e => setEditUser(u => ({ ...u, lastName: e.target.value }))}
-                    />
-                  </label>
-                  <label className="field md:col-span-3 md:col-span-1">
-                    <span>Email</span>
-                    <input
-                      className="card px-3 py-2"
-                      value={editUser.email ?? ""}
-                      onChange={e => setEditUser(u => ({ ...u, email: e.target.value }))}
-                    />
-                  </label>
-                  <label className="field md:col-span-3 md:col-span-1">
-                    <span>Téléphone</span>
-                    <input
-                      className="card px-3 py-2"
-                      value={editUser.phoneNumber ?? ""}
-                      onChange={e => setEditUser(u => ({ ...u, phoneNumber: e.target.value }))}
-                    />
-                  </label>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button className="btn-ghost subtle" onClick={() => setEditUser(null)}>Annuler</button>
-                  <button className="btn-primary" onClick={handleSaveUserEdit} disabled={loading}>Sauvegarder</button>
-                </div>
-              </div>
-            )}
-
-            {!editUser && (
-              <div className="flex gap-2 mt-3">
-                <button className="btn-ghost subtle" onClick={() => handleDeactivateUser(detailUser.id)}>Désactiver</button>
-                <button className="btn-ghost subtle" onClick={() => handleDeleteUser(detailUser.id)}>Supprimer</button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

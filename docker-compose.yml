@@ -1,4 +1,51 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-ecommerce}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecommerce
+    restart: unless-stopped
+  
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    env_file:
+      - ./env.local
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - postgres
+    networks:
+      - ecommerce
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.4
+    container_name: traefik
+    ports:
+      - "80:80"
+      - "8080:8080"  # Dashboard Traefik
+    volumes:
+      - ./reverse-proxy/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./reverse-proxy/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - ecommerce
+    restart: unless-stopped
+
   ms-membership:
     build:
       context: ./ms-membership
@@ -9,10 +56,17 @@ services:
     environment:
       APP_PORT: ${MS_MEMBERSHIP_PORT:-8081}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-ecommerce}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "${MS_MEMBERSHIP_PORT:-8081}:8081"
     networks:
       - ecommerce
+    depends_on:
+      - postgres
 
   ms-product:
     build:
@@ -25,10 +79,17 @@ services:
       APP_PORT: ${MS_PRODUCT_PORT:-8082}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
       ORDER_SERVICE_URL: ${ORDER_SERVICE_URL:-http://ms-order:8083}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-ecommerce}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "${MS_PRODUCT_PORT:-8082}:8082"
     networks:
       - ecommerce
+    depends_on:
+      - postgres
 
   ms-order:
     build:
@@ -40,12 +101,21 @@ services:
     environment:
       APP_PORT: ${MS_ORDER_PORT:-8083}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+      MEMBERSHIP_SERVICE_URL: ${MEMBERSHIP_SERVICE_URL:-http://ms-membership:8081}
+      PRODUCT_SERVICE_URL: ${PRODUCT_SERVICE_URL:-http://ms-product:8082}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-ecommerce}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "${MS_ORDER_PORT:-8083}:8083"
     networks:
       - ecommerce
-    profiles:
-      - order
+    depends_on:
+      - postgres
+      - ms-membership
+      - ms-product
 
   prometheus:
     image: prom/prometheus:latest
@@ -63,6 +133,7 @@ services:
     depends_on:
       - ms-membership
       - ms-product
+      - ms-order
 
   grafana:
     image: grafana/grafana:latest
@@ -78,6 +149,8 @@ services:
       - ecommerce
     volumes:
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
 
@@ -85,19 +158,26 @@ services:
     build:
       context: ./ms-ecommerce-ui
       dockerfile: Dockerfile
+      args:
+        VITE_MEMBERSHIP_API: /api/membership
+        VITE_PRODUCT_API: /api/product
+        VITE_ORDER_API: /api/order
     container_name: ms-ecommerce-ui
     env_file:
       - ./env.local
     environment:
       PORT: ${MS_UI_PORT:-5173}
-      VITE_MEMBERSHIP_API: ${VITE_MEMBERSHIP_API:-http://localhost:8081}
-      VITE_PRODUCT_API: ${VITE_PRODUCT_API:-http://localhost:8082}
-      VITE_ORDER_API: ${VITE_ORDER_API:-http://localhost:8083}
     ports:
       - "${MS_UI_PORT:-5173}:5173"
     networks:
       - ecommerce
+    depends_on:
+      - traefik
 
 networks:
   ecommerce:
     driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:

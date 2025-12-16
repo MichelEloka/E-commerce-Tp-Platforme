@@ -34,7 +34,7 @@ public class DatabaseHealthIndicator implements HealthIndicator {
                     userCount, activeUserCount);
             
             return Health.up()
-                    .withDetail("database", "H2")
+                    .withDetail("database", "PostgreSQL")
                     .withDetail("status", "Connection OK")
                     .withDetail("totalUsers", userCount)
                     .withDetail("activeUsers", activeUserCount)
@@ -44,7 +44,7 @@ public class DatabaseHealthIndicator implements HealthIndicator {
             log.error("Health check database failed", e);
             
             return Health.down()
-                    .withDetail("database", "H2")
+                    .withDetail("database", "PostgreSQL")
                     .withDetail("status", "Connection Failed")
                     .withDetail("error", e.getMessage())
                     .build();

@@ -135,6 +135,8 @@ public class ProductController {
             @Valid @RequestBody ProductRequestDTO request) {
         try {
             ProductResponseDTO created = productService.createProduct(request);
+
+            log.info("Création d'un produit: {}", created.getName());
             URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                     .path("/{id}")
                     .buildAndExpand(created.getId())
@@ -212,6 +214,7 @@ public class ProductController {
             @Parameter(description = "Identifiant du produit", required = true) @PathVariable Long id) {
         try {
             productService.deleteProduct(id);
+            log.info("Suppression du produit: {}", id);
             return ResponseEntity.noContent().build();
         } catch (ResourceNotFoundException e) {
             return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
@@ -313,6 +316,7 @@ public class ProductController {
             @Valid @RequestBody StockUpdateRequest request) {
         try {
             ProductResponseDTO updated = productService.updateStock(id, request.getStock());
+            log.info("Mise à jour du stock du produit {} à {}", id, updated.getStock());
             return ResponseEntity.ok(updated);
         } catch (ResourceNotFoundException e) {
             return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());

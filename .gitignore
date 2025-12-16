@@ -1,3 +1,33 @@
+# Maven build directories
+**/target/
+*.jar
+*.war
+*.class
+
 # Node modules (front-end)
 node_modules/
 ms-ecommerce-ui/node_modules/
+ms-ecommerce-ui/dist/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+env.local
+
+# Logs
+*.log
+
+deploy.sh
+demo_script.sh

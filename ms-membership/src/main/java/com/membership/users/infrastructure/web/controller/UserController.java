@@ -201,14 +201,14 @@ public class UserController {
     }
 
     /**
-     * GET /api/v1/users/search?lastName={lastName}
-     * Recherche des utilisateurs par nom
+     * GET /api/v1/users/search?name={name}
+     * Recherche des utilisateurs par nom ou prénom
      * 
-     * @param lastName Le nom à rechercher
+     * @param name Le nom ou prénom à rechercher
      * @return Liste des utilisateurs correspondants
      */
     @Operation(summary = "Rechercher des utilisateurs par nom", 
-               description = "Recherche des utilisateurs dont le nom contient la chaîne spécifiée")
+               description = "Recherche des utilisateurs dont le nom ou le prénom contient la chaîne spécifiée")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Recherche effectuée avec succès",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -216,12 +216,12 @@ public class UserController {
     })
     @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<UserResponseDTO>> searchUsers(
-            @Parameter(description = "Nom de famille à rechercher", required = true)
-            @RequestParam String lastName) {
+            @Parameter(description = "Nom ou prénom à rechercher", required = true)
+            @RequestParam String name) {
         
-        log.info("GET /api/v1/users/search?lastName={} - Recherche d'utilisateurs", lastName);
+        log.info("GET /api/v1/users/search?name={} - Recherche d'utilisateurs", name);
         
-        List<UserResponseDTO> users = userService.searchUsersByLastName(lastName);
+        List<UserResponseDTO> users = userService.searchUsers(name);
         
         return ResponseEntity.ok(users);
     }

@@ -39,7 +39,7 @@ public class Product {
 
     @NotBlank(message = "Le nom du produit ne peut pas etre vide")
     @Size(min = 3, max = 100, message = "Le nom du produit doit contenir entre 3 et 100 caracteres")
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, unique = true)
     private String name;
 
     @NotBlank(message = "La description du produit ne peut pas etre vide")

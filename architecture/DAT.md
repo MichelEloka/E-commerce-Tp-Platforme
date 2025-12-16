@@ -1,7 +1,7 @@
 # Document d'Architecture Technique (DAT)
 
 ## 1. Vue d'ensemble
-Plateforme e-commerce composee de microservices Spring Boot (ms-membership, ms-product, ms-order), exposees en REST, surveillees par Prometheus/Grafana, front Vite/React. Communication HTTP interne via DNS Docker, bases H2 par service (dev). Packaging Docker + docker-compose.
+Plateforme e-commerce composee de microservices Spring Boot (ms-membership, ms-product, ms-order), exposees en REST, surveillees par Prometheus/Grafana, front Vite/React. Communication HTTP interne via DNS Docker, base PostgreSQL partagee (dev). Packaging Docker + docker-compose.
 
 ```mermaid
 graph LR
@@ -15,8 +15,8 @@ graph LR
 ```
 
 ## 2. Microservices
-- **ms-membership** : gestion utilisateurs (CRUD, activation). Spring Boot 3.5, JPA/H2, port `${MS_MEMBERSHIP_PORT:-8081}`. Actuator + metrics Prometheus exposés sur `/actuator/*`.
-- **ms-product** : catalogue/stock, filtres par categorie, CRUD. Spring Boot 3.5, JPA/H2, port `${MS_PRODUCT_PORT:-8082}`. Client Order pour vérifier l'usage produit. Expose des métriques personnalisées (`products_low_stock_count`, `products_total`, etc.).
+- **ms-membership** : gestion utilisateurs (CRUD, activation). Spring Boot 3.5, JPA/PostgreSQL, port `${MS_MEMBERSHIP_PORT:-8081}`. Actuator + metrics Prometheus exposés sur `/actuator/*`.
+- **ms-product** : catalogue/stock, filtres par categorie, CRUD. Spring Boot 3.5, JPA/PostgreSQL, port `${MS_PRODUCT_PORT:-8082}`. Client Order pour vérifier l'usage produit. Expose des métriques personnalisées (`products_low_stock_count`, `products_total`, etc.).
 - **ms-order** : squelette commandes, port `${MS_ORDER_PORT:-8083}` (non terminé, référencé par ms-product via `ORDER_SERVICE_URL`).
 - **Front** : Vite/React, consomme les API, port `${MS_UI_PORT:-5173}`. Variables VITE_* injectées côté build.
 - **Monitoring** : Prometheus (9090) scrape Actuator, Grafana (3000) dashboards (datasource Prometheus pré-provisionnée).
@@ -28,7 +28,7 @@ graph LR
 - Actuator + Micrometer Prometheus pour metrics
 - Docker/Docker Compose pour orchestration locale
 - Vite/React (Tailwind) pour le front
-- H2 en mémoire pour dev (sans persistance disque)
+- PostgreSQL persistant pour dev (volume Docker)
 
 ## 4. Communication inter-services
 - REST/HTTP, JSON
@@ -37,10 +37,9 @@ graph LR
 - OrderClient (ms-product) cible `ORDER_SERVICE_URL`
 
 ## 5. Donnees
-- Une base H2 en memoire par service (dev), schema `create-drop`
+- Base `ecommerce` Postgres partagee (tables distinctes par service)
 - Seeds produits dans ms-product (data.sql)
-- Pas de partage de schema entre services
-- Pas de persistance disque (perte des donnees au restart en dev)
+- Persistance via volume Docker `postgres_data`
 
 ## 6. Erreurs / resilience
 - Mapping d'erreurs back (product/membership) -> reponses JSON

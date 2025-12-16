@@ -1,0 +1,74 @@
+http:
+  routers:
+    # Frontend - Règle par défaut pour tout le trafic qui n'est pas une API
+    frontend:
+      rule: "PathPrefix(`/`)"
+      service: frontend
+      priority: 1
+      entryPoints:
+        - web
+
+    # Microservices
+    membership:
+      rule: "PathPrefix(`/api/membership`)"
+      service: membership
+      priority: 10
+      entryPoints:
+        - web
+      middlewares:
+        - membership-stripprefix
+
+    product:
+      rule: "PathPrefix(`/api/product`)"
+      service: product
+      priority: 10
+      entryPoints:
+        - web
+      middlewares:
+        - product-stripprefix
+
+    order:
+      rule: "PathPrefix(`/api/order`)"
+      service: order
+      priority: 10
+      entryPoints:
+        - web
+      middlewares:
+        - order-stripprefix
+
+  services:
+    frontend:
+      loadBalancer:
+        servers:
+          - url: "http://ms-ecommerce-ui:5173"
+
+    membership:
+      loadBalancer:
+        servers:
+          - url: "http://ms-membership:8081"
+
+    product:
+      loadBalancer:
+        servers:
+          - url: "http://ms-product:8082"
+
+    order:
+      loadBalancer:
+        servers:
+          - url: "http://ms-order:8083"
+
+  middlewares:
+    membership-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/api/membership"
+
+    product-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/api/product"
+
+    order-stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/api/order"

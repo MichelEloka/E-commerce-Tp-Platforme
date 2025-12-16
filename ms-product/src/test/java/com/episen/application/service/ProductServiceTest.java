@@ -11,6 +11,7 @@ import com.episen.infrastructure.exception.ResourceAlreadyExistsException;
 import com.episen.infrastructure.exception.ResourceNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Product Service Tests")
 class ProductServiceTest {
 
     @Mock
@@ -49,6 +51,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @DisplayName("Should create product successfully and return DTO")
     void createProduct_shouldSaveAndReturnDto() {
         ProductRequestDTO request = ProductRequestDTO.builder()
                 .name("Laptop")
@@ -88,6 +91,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when product name already exists")
     void createProduct_shouldThrowWhenNameAlreadyExists() {
         ProductRequestDTO request = ProductRequestDTO.builder()
                 .name("Existing")
@@ -104,6 +108,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when product not found by ID")
     void getProductById_shouldThrowWhenNotFound() {
         given(productRepository.findById(42L)).willReturn(Optional.empty());
 
@@ -111,6 +116,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when trying to delete product that is in an order")
     void deleteProduct_shouldThrowWhenProductInOrder() {
         Product product = Product.builder()
                 .id(2L)
