@@ -111,6 +111,9 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
 
+cors:
+  allowed-origins: '${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost}'
+
 # Inter-service URLs (Docker DNS names for containerized env)
 membership:
   service:

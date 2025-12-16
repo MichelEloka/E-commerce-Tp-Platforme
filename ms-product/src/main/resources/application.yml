@@ -110,3 +110,6 @@ logging:
     org.hibernate.SQL: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+
+cors:
+  allowed-origins: '${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost}'
