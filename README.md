@@ -43,7 +43,7 @@ Cette plateforme e-commerce est composée de **3 microservices indépendants** c
 
 ## Architecture
 
-![Architecture microservices](diagram-tp1-orchestrationMS.svg)
+![Architecture microservices](diagram-archi.png)
 
 ### Services
 
