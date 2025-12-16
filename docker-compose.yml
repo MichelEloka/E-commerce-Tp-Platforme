@@ -158,14 +158,15 @@ services:
     build:
       context: ./ms-ecommerce-ui
       dockerfile: Dockerfile
+      args:
+        VITE_MEMBERSHIP_API: /api/membership
+        VITE_PRODUCT_API: /api/product
+        VITE_ORDER_API: /api/order
     container_name: ms-ecommerce-ui
     env_file:
       - ./env.local
     environment:
       PORT: ${MS_UI_PORT:-5173}
-      VITE_MEMBERSHIP_API: http://localhost/api/membership
-      VITE_PRODUCT_API: http://localhost/api/product
-      VITE_ORDER_API: http://localhost/api/order
     ports:
       - "${MS_UI_PORT:-5173}:5173"
     networks:

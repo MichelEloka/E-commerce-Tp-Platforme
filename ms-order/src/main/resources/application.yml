@@ -11,12 +11,12 @@ spring:
 
   sql:
     init:
-      mode: never
+      mode: always
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     defer-datasource-initialization: true
     properties:

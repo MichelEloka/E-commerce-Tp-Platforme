@@ -4,6 +4,12 @@ COPY package*.json ./
 RUN npm ci --quiet
 COPY . .
 RUN chmod -R +x node_modules/.bin
+
+# Déclarer les arguments pour qu'ils soient disponibles comme variables d'environnement pendant le build
+ARG VITE_MEMBERSHIP_API
+ARG VITE_PRODUCT_API
+ARG VITE_ORDER_API
+
 RUN npm run build
 
 FROM node:20-alpine

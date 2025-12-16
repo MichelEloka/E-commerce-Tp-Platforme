@@ -1,0 +1,60 @@
+{
+  "uid": "ecommerce-overview",
+  "title": "E-commerce - Overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Débit requêtes par service (req/s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum by (application) (rate(http_server_requests_seconds_count[5m]))", "legendFormat": "{{application}}" } ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" }, "noDataState": "NoData" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Erreurs 5xx par service (req/s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum by (application) (rate(http_server_requests_seconds_count{status=~\"5..\"}[5m]))", "legendFormat": "{{application}}" } ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" }, "noDataState": "NoData" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Commandes créées (24h)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(increase(orders_total[24h]))" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "orientation": "vertical", "colorMode": "value", "graphMode": "none", "textMode": "auto", "noDataState": "NoData" },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 16 }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Users créés (24h)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(increase(http_server_requests_seconds_count{application=\"ms-membership\",method=\"POST\",uri=\"/api/v1/users\"}[24h]))" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "orientation": "vertical", "colorMode": "value", "graphMode": "none", "textMode": "auto", "noDataState": "NoData" },
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 16 }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Produits créés (24h)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(increase(http_server_requests_seconds_count{application=\"ms-product\",method=\"POST\",uri=\"/api/v1/products\"}[24h]))" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "orientation": "vertical", "colorMode": "value", "graphMode": "none", "textMode": "auto", "noDataState": "NoData" },
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 16 }
+    }
+  ]
+}

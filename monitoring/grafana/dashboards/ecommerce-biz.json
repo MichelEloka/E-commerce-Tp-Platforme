@@ -1,0 +1,60 @@
+{
+  "uid": "ecommerce-biz",
+  "title": "E-commerce - Métier",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1d", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Commandes du jour",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "orders_today_count" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "orientation": "vertical", "colorMode": "value", "graphMode": "none", "textMode": "auto", "noDataState": "NoData" },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Montant du jour",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "orders_today_total_amount" } ],
+      "fieldConfig": { "defaults": { "unit": "currencyEUR", "decimals": 2, "min": 0 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "orientation": "vertical", "colorMode": "value", "graphMode": "none", "textMode": "auto", "noDataState": "NoData" },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Commandes par statut",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum by (status) (orders_count_by_status)", "legendFormat": "{{status}}" } ],
+      "fieldConfig": { "defaults": { "unit": "none", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" }, "noDataState": "NoData" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Produits en rupture/bas stock",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "products_low_stock_count" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "orientation": "vertical", "colorMode": "value", "graphMode": "none", "textMode": "auto", "noDataState": "NoData" },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 8 }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Commandes totales",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(orders_count_by_status)" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "orientation": "vertical", "colorMode": "value", "graphMode": "none", "textMode": "auto", "noDataState": "NoData" },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 8 }
+    }
+  ]
+}

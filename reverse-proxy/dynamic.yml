@@ -1,8 +1,8 @@
 http:
   routers:
-    # Frontend
+    # Frontend - Règle par défaut pour tout le trafic qui n'est pas une API
     frontend:
-      rule: "Host(`localhost`)"
+      rule: "PathPrefix(`/`)"
       service: frontend
       priority: 1
       entryPoints:
@@ -10,7 +10,7 @@ http:
 
     # Microservices
     membership:
-      rule: "Host(`localhost`) && PathPrefix(`/api/membership`)"
+      rule: "PathPrefix(`/api/membership`)"
       service: membership
       priority: 10
       entryPoints:
@@ -19,7 +19,7 @@ http:
         - membership-stripprefix
 
     product:
-      rule: "Host(`localhost`) && PathPrefix(`/api/product`)"
+      rule: "PathPrefix(`/api/product`)"
       service: product
       priority: 10
       entryPoints:
@@ -28,7 +28,7 @@ http:
         - product-stripprefix
 
     order:
-      rule: "Host(`localhost`) && PathPrefix(`/api/order`)"
+      rule: "PathPrefix(`/api/order`)"
       service: order
       priority: 10
       entryPoints:
