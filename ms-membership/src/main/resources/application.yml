@@ -103,11 +103,11 @@ info:
 logging:
   level:
     root: INFO
-    com.users: INFO
-    org.springframework.web: INFO
-    org.hibernate.SQL: WARN
+    com.membership.users: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: ERROR
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    console: "%d{HH:mm:ss} %-5level %logger{36} - %msg%n"
 
 cors:
   allowed-origins: '${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost}'

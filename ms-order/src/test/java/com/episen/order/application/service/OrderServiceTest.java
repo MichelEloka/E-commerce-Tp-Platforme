@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Order Service Tests")
 class OrderServiceTest {
 
     @Mock
@@ -85,6 +86,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should get order by ID successfully")
     void testGetOrderById_Success() {
         OrderResponseDTO expectedResponse = new OrderResponseDTO();
         expectedResponse.setId(1L);
@@ -106,6 +108,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when order not found by ID")
     void testGetOrderById_NotFound() {
         when(orderRepository.findByIdWithItems(999L)).thenReturn(Optional.empty());
 
@@ -117,6 +120,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should update order status successfully")
     void testUpdateOrderStatus_Success() {
         OrderResponseDTO expectedResponse = new OrderResponseDTO();
         expectedResponse.setId(1L);
@@ -136,6 +140,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when trying to update status of delivered order")
     void testUpdateOrderStatus_DeliveredOrder_ShouldThrowException() {
         testOrder.setStatus(OrderStatus.DELIVERED);
         when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
@@ -149,6 +154,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should cancel order successfully")
     void testCancelOrder_Success() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
@@ -160,6 +166,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when trying to cancel already cancelled order")
     void testCancelOrder_AlreadyCancelled_ShouldThrowException() {
         testOrder.setStatus(OrderStatus.CANCELLED);
         when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
@@ -173,6 +180,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should get all orders by user ID")
     void testGetOrdersByUserId() {
         OrderResponseDTO expectedResponse = new OrderResponseDTO();
         expectedResponse.setId(1L);
@@ -191,6 +199,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should get all orders by status")
     void testGetOrdersByStatus() {
         OrderResponseDTO expectedResponse = new OrderResponseDTO();
         expectedResponse.setId(1L);
@@ -209,6 +218,7 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Should get all orders")
     void testGetAllOrders() {
         OrderResponseDTO expectedResponse = new OrderResponseDTO();
         expectedResponse.setId(1L);

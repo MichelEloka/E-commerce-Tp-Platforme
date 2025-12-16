@@ -29,5 +29,5 @@ env.local
 # Logs
 *.log
 
-# Deployment scripts
 deploy.sh
+demo_script.sh

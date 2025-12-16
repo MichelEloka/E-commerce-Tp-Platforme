@@ -100,11 +100,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-    <useFile>false</useFile>
-    <redirectTestOutputToFile>false</redirectTestOutputToFile>
-    <printSummary>true</printSummary>
-    <showSuccess>true</showSuccess>
-  </configuration>
+                    <trimStackTrace>false</trimStackTrace>
+                    <useFile>false</useFile>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
