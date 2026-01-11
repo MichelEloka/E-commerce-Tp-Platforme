@@ -48,6 +48,14 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
+    @NotBlank(message = "Le mot de passe ne peut pas etre vide")
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
+
+    @NotBlank(message = "Les roles ne peuvent pas etre vides")
+    @Column(name = "roles", nullable = false, length = 100)
+    private String roles;
+
     @Column(name = "active")
     private Boolean active = true;
 

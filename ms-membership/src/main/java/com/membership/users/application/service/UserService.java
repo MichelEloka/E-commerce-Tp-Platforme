@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.membership.users.application.dto.UserRequestDTO;
 import com.membership.users.application.dto.UserResponseDTO;
@@ -33,9 +34,12 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class UserService {
 
+    private static final String DEFAULT_ROLE = "ROLE_USER";
+
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final MeterRegistry meterRegistry;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Récupère tous les utilisateurs
@@ -80,7 +84,13 @@ public class UserService {
             throw new ResourceAlreadyExistsException("User", "email", userRequestDTO.getEmail());
         }
         
+        if (userRequestDTO.getPassword() == null || userRequestDTO.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Le mot de passe est obligatoire");
+        }
+
         User user = userMapper.toEntity(userRequestDTO);
+        user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+        user.setRoles(normalizeRoles(userRequestDTO.getRoles()));
         User savedUser = userRepository.save(user);
         
         // Métrique personnalisée
@@ -113,6 +123,12 @@ public class UserService {
         }
         
         userMapper.updateEntityFromDto(userRequestDTO, user);
+        if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+        }
+        if (userRequestDTO.getRoles() != null) {
+            user.setRoles(normalizeRoles(userRequestDTO.getRoles()));
+        }
         User updatedUser = userRepository.save(user);
         
         // Métrique personnalisée
@@ -201,5 +217,13 @@ public class UserService {
         log.info("Utilisateur désactivé avec succès: ID={}, Email={}", id, user.getEmail());
         
         return userMapper.toDto(deactivatedUser);
+    }
+
+    private String normalizeRoles(String roles) {
+        String value = roles == null ? "" : roles.trim();
+        if (value.isEmpty()) {
+            return DEFAULT_ROLE;
+        }
+        return value;
     }
 }

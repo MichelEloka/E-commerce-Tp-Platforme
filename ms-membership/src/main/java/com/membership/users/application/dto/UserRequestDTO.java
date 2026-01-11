@@ -33,4 +33,10 @@ public class UserRequestDTO {
     @NotBlank(message = "L'email ne peut pas être vide")
     @Email(message = "L'email doit être valide")
     private String email;
+
+    @Size(min = 8, max = 128, message = "Le mot de passe doit contenir entre 8 et 128 caracteres")
+    private String password;
+
+    @Size(max = 100, message = "Les roles ne doivent pas depasser 100 caracteres")
+    private String roles;
 }

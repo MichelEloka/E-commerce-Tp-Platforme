@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -32,13 +33,16 @@ class UserServiceTest {
     @Mock
     private UserMapper userMapper;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private UserService userService;
 
     private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository, userMapper, meterRegistry);
+        userService = new UserService(userRepository, userMapper, meterRegistry, passwordEncoder);
     }
 
     @Test
@@ -49,6 +53,8 @@ class UserServiceTest {
                 .firstName("John")
                 .lastName("Doe")
                 .email("john.doe@example.com")
+                .password("password123")
+                .roles("ROLE_USER")
                 .build();
 
         User entity = User.builder()
@@ -68,6 +74,7 @@ class UserServiceTest {
                 .build();
 
         given(userRepository.existsByEmail(request.getEmail())).willReturn(false);
+        given(passwordEncoder.encode(request.getPassword())).willReturn("encoded-password");
         given(userMapper.toEntity(request)).willReturn(entity);
         given(userRepository.save(entity)).willReturn(entity);
         given(userMapper.toDto(entity)).willReturn(response);
