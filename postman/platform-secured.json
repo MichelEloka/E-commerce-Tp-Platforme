@@ -1,0 +1,145 @@
+{
+  "info": {
+    "name": "platform-secured",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "JWT secured scenarios. Set membership_api, product_api, order_api if needed. For the expired token test, set expired_token to a real expired JWT (ex: set JWT_EXPIRATION_SECONDS=1, login, wait, copy token)."
+  },
+  "item": [
+    {
+      "name": "1. Login -> token",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{membership_api}}/api/v1/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"jean.dupont@example.com\",\n  \"password\": \"password123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status is 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.expect(json.token).to.be.a(\"string\");",
+              "pm.environment.set(\"auth_token\", json.token);",
+              "if (json.expiresIn) {",
+              "  pm.environment.set(\"expires_in\", json.expiresIn);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Product with token -> 200",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+        ],
+        "url": "{{product_api}}/api/v1/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status is 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Product without token -> 401",
+      "request": {
+        "method": "GET",
+        "url": "{{product_api}}/api/v1/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status is 401\", function () {",
+              "  pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Order with expired token -> 403",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{expired_token}}" }
+        ],
+        "url": "{{order_api}}/api/v1/orders"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const token = pm.environment.get(\"expired_token\");",
+              "if (!token || token === \"PASTE_EXPIRED_TOKEN\") {",
+              "  pm.test(\"expired_token is set\", function () {",
+              "    pm.expect.fail(\"Set expired_token to a real expired JWT to get 403.\");",
+              "  });",
+              "} else {",
+              "  pm.test(\"Status is 403\", function () {",
+              "    pm.response.to.have.status(403);",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Create order with token -> 201",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+        ],
+        "url": "{{order_api}}/api/v1/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 1,\n  \"shippingAddress\": \"10 rue de Paris, 75001 Paris\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status is 201\", function () {",
+              "  pm.response.to.have.status(201);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "membership_api", "value": "http://localhost:8081" },
+    { "key": "product_api", "value": "http://localhost:8082" },
+    { "key": "order_api", "value": "http://localhost:8083" },
+    { "key": "auth_token", "value": "" },
+    { "key": "expired_token", "value": "PASTE_EXPIRED_TOKEN" }
+  ]
+}

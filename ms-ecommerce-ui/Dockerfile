@@ -1,7 +1,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --quiet
+RUN npm ci --quiet --include=dev
 COPY . .
 RUN chmod -R +x node_modules/.bin
 

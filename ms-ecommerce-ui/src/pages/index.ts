@@ -9,3 +9,6 @@ export { UsersPage, NewUserPage, UserDetailPage, UserEditPage } from './UserPage
 
 // Orders
 export { OrdersPage, NewOrderPage, OrderDetailPage } from './OrderPage';
+
+// Auth
+export { AuthPage } from './AuthPage';

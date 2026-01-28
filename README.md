@@ -52,7 +52,7 @@ Cette plateforme e-commerce est composée de **3 microservices indépendants** c
 | **ms-membership** | 8081 | Gestion des utilisateurs | PostgreSQL (ecommerce) |
 | **ms-product** | 8082 | Catalogue produits | PostgreSQL (ecommerce) |
 | **ms-order** | 8083 | Gestion des commandes | PostgreSQL (ecommerce) |
-| **Traefik** | 80 | Reverse proxy | - |
+| **Traefik** | 80/443 | Reverse proxy | - |
 | **PostgreSQL** | 5432 | Base de données | - |
 | **pgAdmin** | 5050 | Administration BDD | - |
 | **Prometheus** | 9090 | Métriques | - |
@@ -149,13 +149,16 @@ cd ms-order && mvn spring-boot:run
 
 ## Utilisation
 
+Note: HTTPS utilise un certificat auto-signe. Le navigateur affichera un avertissement, et en `curl` utilisez `-k`.
+
 ### Accès aux services
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| **API Membership** | http://localhost/api/membership/api/v1/users | - |
-| **API Product** | http://localhost/api/product/api/v1/products | - |
-| **API Order** | http://localhost/api/order/api/v1/orders | - |
+| **Front UI** | https://localhost | - |
+| **API Membership** | https://localhost/api/membership/api/v1/users | - |
+| **API Product** | https://localhost/api/product/api/v1/products | - |
+| **API Order** | https://localhost/api/order/api/v1/orders | - |
 | **Swagger Membership** | http://localhost:8081/swagger-ui.html | - |
 | **Swagger Product** | http://localhost:8082/swagger-ui.html | - |
 | **Swagger Order** | http://localhost:8083/swagger-ui.html | - |
@@ -167,7 +170,7 @@ cd ms-order && mvn spring-boot:run
 
 #### Créer un utilisateur
 ```bash
-curl -X POST http://localhost/api/membership/api/v1/users \
+curl -k -X POST https://localhost/api/membership/api/v1/users \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "John",
@@ -178,7 +181,7 @@ curl -X POST http://localhost/api/membership/api/v1/users \
 
 #### Créer un produit
 ```bash
-curl -X POST http://localhost/api/product/api/v1/products \
+curl -k -X POST https://localhost/api/product/api/v1/products \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Laptop Pro",
@@ -191,7 +194,7 @@ curl -X POST http://localhost/api/product/api/v1/products \
 
 #### Créer une commande
 ```bash
-curl -X POST http://localhost/api/order/api/v1/orders \
+curl -k -X POST https://localhost/api/order/api/v1/orders \
   -H "Content-Type: application/json" \
   -d '{
     "userId": 1,
@@ -256,9 +259,9 @@ Une collection Postman complète est disponible dans `postman/platform-tests.jso
 Vérifier la santé des services:
 
 ```bash
-curl http://localhost/api/membership/actuator/health
-curl http://localhost/api/product/actuator/health
-curl http://localhost/api/order/actuator/health
+curl -k https://localhost/api/membership/actuator/health
+curl -k https://localhost/api/product/actuator/health
+curl -k https://localhost/api/order/actuator/health
 ```
 
 ### Prometheus
@@ -355,7 +358,7 @@ Projet réalisé dans le cadre du TP1 - Orchestration des microservices
 Pour toute question ou problème:
 - Email: michel.eloka@etu.u-pec.fr / gaby.njonou-kouaya@etu.u-pec.fr
 - Documentation: [DEPLOYMENT.md](DEPLOYMENT.md)
-- Health Checks: http://localhost/api/*/actuator/health
+- Health Checks: https://localhost/api/*/actuator/health (curl -k)
 
 ---
 

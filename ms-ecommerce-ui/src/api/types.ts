@@ -17,6 +17,14 @@ export type User = {
   lastName?: string;
   email?: string;
   phoneNumber?: string;
+  password?: string;
+  active?: boolean;
+  roles?: string;
+};
+
+export type AuthResponse = {
+  token: string;
+  expiresIn: number;
 };
 
 export type OrderItem = {

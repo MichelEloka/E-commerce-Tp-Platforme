@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Routes, Route, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, NavLink, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { ToastContainer, toast, Slide } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Sun, Moon, Plus, Package, ShoppingCart, Users as UsersIcon } from "lucide-react";
-import { api } from "./api/client";
+import { Sun, Moon, Plus, Package, ShoppingCart, Users as UsersIcon, LogOut } from "lucide-react";
+import { api, getAuthToken, setAuthToken } from "./api/client";
 import type { Order, Product, User } from "./api/types";
 import {
   DashboardPage,
@@ -17,9 +17,36 @@ import {
   UsersPage,
   NewUserPage,
   UserDetailPage,
-  UserEditPage
+  UserEditPage,
+  AuthPage
 } from "./pages";
 
+type JwtPayload = {
+  userId?: number | string;
+  sub?: string;
+  email?: string;
+};
+
+function parseJwtPayload(token: string): JwtPayload | null {
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(normalized.length + (4 - (normalized.length % 4)) % 4, "=");
+    const decoded = atob(padded);
+    return JSON.parse(decoded) as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
+function getUserIdFromToken(token: string): number | null {
+  const payload = parseJwtPayload(token);
+  if (!payload) return null;
+  const raw = payload.userId ?? payload.sub;
+  const value = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : NaN;
+  return Number.isFinite(value) ? value : null;
+}
 
 const categories: Product["category"][] = ["ELECTRONICS", "BOOKS", "FOOD", "OTHER"];
 
@@ -27,10 +54,12 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [token, setToken] = useState<string | null>(() => getAuthToken());
   const [products, setProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -45,7 +74,13 @@ function App() {
     stock: 0,
     category: "ELECTRONICS"
   });
-  const [newUser, setNewUser] = useState({ firstName: "", lastName: "", email: "" });
+  const [newUser, setNewUser] = useState<Partial<User>>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    roles: "ROLE_USER"
+  });
   const [userSearch, setUserSearch] = useState("");
   const [userActiveOnly, setUserActiveOnly] = useState(false);
   const [userIdLookup, setUserIdLookup] = useState("");
@@ -56,6 +91,11 @@ function App() {
   });
   const [filterOrderStatus, setFilterOrderStatus] = useState<string>("");
   const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const isAuthenticated = Boolean(token);
+  const isAuthRoute = location.pathname === "/login" || location.pathname === "/register";
+  const mainLayoutClass = !isAuthenticated || isAuthRoute
+    ? "auth-shell"
+    : "max-w-7xl mx-auto px-6 py-8 space-y-8";
 
   const lowStock = useMemo(() => products.filter(p => p.stock < 5).length, [products]);
   const totalStock = useMemo(() => products.reduce((acc, p) => acc + (p.stock ?? 0), 0), [products]);
@@ -66,6 +106,12 @@ function App() {
     const deliveredOrders = orders.filter(o => o.status === "DELIVERED").length;
     return { totalRevenue, pendingOrders, deliveredOrders };
   }, [orders]);
+
+  const currentUserName = useMemo(() => {
+    if (!currentUser) return "";
+    const fullName = `${currentUser.firstName ?? ""} ${currentUser.lastName ?? ""}`.trim();
+    return fullName || currentUser.email || "";
+  }, [currentUser]);
 
   const usersMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -147,15 +193,58 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     loadProducts();
     loadUsers();
     loadOrders();
-  }, []);
+  }, [isAuthenticated, loadProducts, loadUsers, loadOrders]);
+
+  useEffect(() => {
+    if (!token) {
+      setCurrentUser(null);
+      return;
+    }
+    const userId = getUserIdFromToken(token);
+    if (!userId) {
+      setCurrentUser(null);
+      return;
+    }
+    let cancelled = false;
+    api.users.get(userId)
+      .then((data) => {
+        if (!cancelled) setCurrentUser(data as User);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          console.warn("Unable to load current user", e);
+          setCurrentUser(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   useEffect(() => {
     document.body.classList.remove("theme-dark", "theme-light");
     document.body.classList.add(`theme-${theme}`);
   }, [theme]);
+
+  const handleAuthenticated = useCallback((authToken: string) => {
+    setAuthToken(authToken);
+    setToken(authToken);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    setAuthToken(null);
+    setToken(null);
+    setCurrentUser(null);
+    setProducts([]);
+    setAllProducts([]);
+    setUsers([]);
+    setOrders([]);
+    navigate("/login");
+  }, [navigate]);
 
   async function handleCreateProduct() {
     try {
@@ -259,8 +348,20 @@ function App() {
   async function handleCreateUser() {
     try {
       setLoading(true);
-      await api.users.create(newUser);
-      setNewUser({ firstName: "", lastName: "", email: "" });
+      await api.users.create({
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        password: newUser.password,
+        roles: newUser.roles
+      });
+      setNewUser({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        roles: "ROLE_USER"
+      });
       await (userActiveOnly ? loadUsersActive() : loadUsers());
       toast.success("Utilisateur créé avec succès");
       navigate("/users");
@@ -279,8 +380,7 @@ function App() {
       await api.users.update(id, {
         firstName: user.firstName,
         lastName: user.lastName,
-        email: user.email,
-        phoneNumber: user.phoneNumber
+        email: user.email
       });
       await (userActiveOnly ? loadUsersActive() : loadUsers());
       toast.success("Utilisateur mis à jour avec succès");
@@ -403,6 +503,7 @@ function App() {
   return (
     <div className="app-shell">
       <ToastContainer position="bottom-right" theme={theme === "dark" ? "dark" : "light"} transition={Slide} />
+      {isAuthenticated && !isAuthRoute && (
       <header className="app-header sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between gap-6">
@@ -429,6 +530,12 @@ function App() {
             </div>
 
             <div className="flex items-center gap-3">
+              {currentUserName && (
+                <div className="user-identity">
+                  <span className="user-label">Connecte</span>
+                  <span className="user-name">{currentUserName}</span>
+                </div>
+              )}
               <div className="relative">
                 <button
                   className="btn-primary flex items-center gap-2"
@@ -466,6 +573,9 @@ function App() {
                 )}
               </div>
 
+              <button className="btn-ghost icon-only" onClick={handleLogout} title="Se deconnecter">
+                <LogOut size={18} />
+              </button>
               <button className="btn-ghost icon-only" onClick={() => setTheme(t => (t === "dark" ? "light" : "dark"))}>
                 {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               </button>
@@ -489,10 +599,25 @@ function App() {
           </nav>
         </div>
       </header>
+      )}
 
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <main className={mainLayoutClass}>
 
         <Routes>
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? <Navigate to="/" replace /> : <AuthPage mode="login" onAuthenticated={handleAuthenticated} />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              isAuthenticated ? <Navigate to="/" replace /> : <AuthPage mode="register" onAuthenticated={handleAuthenticated} />
+            }
+          />
+          {isAuthenticated ? (
+            <>
           <Route path="/" element={
             <DashboardPage
               orders={orders}
@@ -591,6 +716,10 @@ function App() {
               onSaveUserEdit={handleSaveUserEdit}
             />
           } />
+            </>
+          ) : (
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          )}
         </Routes>
       </main>
     </div>

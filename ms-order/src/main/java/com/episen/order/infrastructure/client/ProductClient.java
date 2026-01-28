@@ -7,8 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -32,7 +36,13 @@ public class ProductClient {
     public ProductResponseDTO getProduct(Long productId) {
         String url = productServiceUrl + "/api/v1/products/{id}";
         try {
-            return restTemplate.getForObject(url, ProductResponseDTO.class, productId);
+            return restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    new HttpEntity<>(buildAuthHeaders()),
+                    ProductResponseDTO.class,
+                    productId
+            ).getBody();
         } catch (HttpClientErrorException.NotFound e) {
             throw new ResourceNotFoundException("Product", "id", productId);
         } catch (RestClientException e) {
@@ -60,11 +70,34 @@ public class ProductClient {
                 .build();
 
         try {
-            restTemplate.exchange(url, HttpMethod.PATCH, new HttpEntity<>(request), ProductResponseDTO.class, productId);
+            restTemplate.exchange(
+                    url,
+                    HttpMethod.PATCH,
+                    new HttpEntity<>(request, buildAuthHeaders()),
+                    ProductResponseDTO.class,
+                    productId
+            );
         } catch (RestClientException e) {
             log.error("Erreur lors de la mise a jour du stock pour productId {}", productId, e);
             throw new IllegalStateException("Impossible de mettre a jour le stock", e);
         }
+    }
+
+    private HttpHeaders buildAuthHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        String token = resolveBearerToken();
+        if (token != null) {
+            headers.setBearerAuth(token);
+        }
+        return headers;
+    }
+
+    private String resolveBearerToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof JwtAuthenticationToken jwtAuthentication) {
+            return jwtAuthentication.getToken().getTokenValue();
+        }
+        return null;
     }
 
     @Data

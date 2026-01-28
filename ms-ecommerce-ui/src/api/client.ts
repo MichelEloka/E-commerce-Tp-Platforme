@@ -1,17 +1,49 @@
 const MEMBERSHIP_API = import.meta.env.VITE_MEMBERSHIP_API ?? "http://localhost/api/membership";
 const PRODUCT_API = import.meta.env.VITE_PRODUCT_API ?? "http://localhost/api/product";
 const ORDER_API = import.meta.env.VITE_ORDER_API ?? "http://localhost/api/order";
+const AUTH_TOKEN_KEY = "auth_token";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+type RequestOptions = {
+  withAuth?: boolean;
+  headers?: Record<string, string>;
+};
 
-async function request<T>(base: string, path: string, method: HttpMethod = "GET", body?: unknown): Promise<T> {
+export function getAuthToken(): string | null {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function setAuthToken(token: string | null) {
+  if (typeof localStorage === "undefined") return;
+  if (!token) {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    return;
+  }
+  localStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+
+async function request<T>(
+  base: string,
+  path: string,
+  method: HttpMethod = "GET",
+  body?: unknown,
+  options: RequestOptions = {}
+): Promise<T> {
   let res: Response;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers ?? {})
+  };
+  const shouldAttachAuth = options.withAuth !== false;
+  const token = shouldAttachAuth ? getAuthToken() : null;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
   try {
     res = await fetch(`${base}${path}`, {
       method,
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers,
       body: body ? JSON.stringify(body) : undefined
     });
   } catch (e) {
@@ -48,6 +80,18 @@ async function request<T>(base: string, path: string, method: HttpMethod = "GET"
 }
 
 export const api = {
+  auth: {
+    login: (payload: { email: string; password: string }) =>
+      request<{ token: string; expiresIn: number }>(
+        MEMBERSHIP_API,
+        "/api/v1/auth/login",
+        "POST",
+        payload,
+        { withAuth: false }
+      ),
+    register: (payload: { firstName: string; lastName: string; email: string; password: string; roles?: string }) =>
+      request<any>(MEMBERSHIP_API, "/api/v1/users", "POST", payload, { withAuth: false })
+  },
   products: {
     list: () => request<any[]>(PRODUCT_API, "/api/v1/products"),
     search: (name: string) => request<any[]>(PRODUCT_API, `/api/v1/products/search?name=${encodeURIComponent(name)}`),

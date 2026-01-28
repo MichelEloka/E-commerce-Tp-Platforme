@@ -38,10 +38,12 @@ services:
     container_name: traefik
     ports:
       - "80:80"
+      - "443:443"
       - "8080:8080"  # Dashboard Traefik
     volumes:
       - ./reverse-proxy/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./reverse-proxy/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./reverse-proxy/certs:/etc/traefik/certs:ro
     networks:
       - ecommerce
     restart: unless-stopped
@@ -61,12 +63,19 @@ services:
       DB_NAME: ${DB_NAME:-ecommerce}
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_PRIVATE_KEY_PATH: /run/secrets/private_key.pem
+      JWT_PUBLIC_KEY_PATH: /run/secrets/public_key.pem
     ports:
       - "${MS_MEMBERSHIP_PORT:-8081}:8081"
     networks:
       - ecommerce
     depends_on:
       - postgres
+    secrets:
+      - "private_key.pem"
+      - "public_key.pem"
+   
+
 
   ms-product:
     build:
@@ -84,12 +93,15 @@ services:
       DB_NAME: ${DB_NAME:-ecommerce}
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_PUBLIC_KEY_PATH: /run/secrets/public_key.pem
     ports:
       - "${MS_PRODUCT_PORT:-8082}:8082"
     networks:
       - ecommerce
     depends_on:
       - postgres
+    secrets:
+      - "public_key.pem"
 
   ms-order:
     build:
@@ -108,6 +120,7 @@ services:
       DB_NAME: ${DB_NAME:-ecommerce}
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_PUBLIC_KEY_PATH: /run/secrets/public_key.pem
     ports:
       - "${MS_ORDER_PORT:-8083}:8083"
     networks:
@@ -116,6 +129,8 @@ services:
       - postgres
       - ms-membership
       - ms-product
+    secrets:
+      - "public_key.pem"
 
   prometheus:
     image: prom/prometheus:latest
@@ -159,9 +174,9 @@ services:
       context: ./ms-ecommerce-ui
       dockerfile: Dockerfile
       args:
-        VITE_MEMBERSHIP_API: /api/membership
-        VITE_PRODUCT_API: /api/product
-        VITE_ORDER_API: /api/order
+        VITE_MEMBERSHIP_API: ${VITE_MEMBERSHIP_API:-https://localhost/api/membership}
+        VITE_PRODUCT_API: ${VITE_PRODUCT_API:-https://localhost/api/product}
+        VITE_ORDER_API: ${VITE_ORDER_API:-https://localhost/api/order}
     container_name: ms-ecommerce-ui
     env_file:
       - ./env.local
@@ -181,3 +196,9 @@ networks:
 volumes:
   postgres_data:
   pgadmin_data:
+
+secrets:
+  private_key.pem:
+    file: ./secrets/private_key.pem
+  public_key.pem:
+    file: ./secrets/public_key.pem

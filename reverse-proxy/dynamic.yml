@@ -6,7 +6,8 @@ http:
       service: frontend
       priority: 1
       entryPoints:
-        - web
+        - websecure
+      tls: {}
 
     # Microservices
     membership:
@@ -14,27 +15,30 @@ http:
       service: membership
       priority: 10
       entryPoints:
-        - web
+        - websecure
       middlewares:
         - membership-stripprefix
+      tls: {}
 
     product:
       rule: "PathPrefix(`/api/product`)"
       service: product
       priority: 10
       entryPoints:
-        - web
+        - websecure
       middlewares:
         - product-stripprefix
+      tls: {}
 
     order:
       rule: "PathPrefix(`/api/order`)"
       service: order
       priority: 10
       entryPoints:
-        - web
+        - websecure
       middlewares:
         - order-stripprefix
+      tls: {}
 
   services:
     frontend:
@@ -72,3 +76,8 @@ http:
       stripPrefix:
         prefixes:
           - "/api/order"
+
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/localhost.crt
+      keyFile: /etc/traefik/certs/localhost.key
